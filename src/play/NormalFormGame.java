@@ -253,6 +253,7 @@ public class NormalFormGame {
 
             int nVariables = subsetSize * 2 + 2;
 
+            // Do all this for every combination of subsets
             for (boolean[] rowSubset : rowSubsets) {
                 for (boolean[] colSubset : colSubsets) {
                     System.out.print("TESTING SUBSET ");
@@ -264,11 +265,12 @@ public class NormalFormGame {
                     double minUtil = 0;
 
                     //region Define Cs
-                        double[] c = new double[nVariables];
+                    double[] c = new double[nVariables]; // All zeros. We're using a function
                     //endregion
 
                     //region Define Bs
                     double[] b = new double[nConstraints];
+                    // Make sure all probabilities add to one (last two rows of constraints)
                     b[nConstraints-2] = 1.0;
                     b[nConstraints-1] = 1.0;
                     //endregion
@@ -278,13 +280,13 @@ public class NormalFormGame {
 
                     //region P1 utilities paired with P2's probabilities
                     for (int i = 0; i < nRow; i++) {
-                        int idx = subsetSize;
+                        int idx = subsetSize; // Gets incremented as we find subset elements
                         for (int j = 0; j < nCol; j++) {
                             if (colSubset[j]) {
-                                double util = u1[iRow.get(i)][iCol.get(j)];
-                                A[i][idx] = util;
+                                double util = u1[iRow.get(i)][iCol.get(j)]; // Get utility from NormalGame
+                                A[i][idx] = util; // Add utility multiplied by the P2's action probability
 
-                                idx++;
+                                idx++; // Found subset element, get next index ready
                                 if(util < minUtil)
                                     minUtil = util;
                             }
@@ -296,6 +298,7 @@ public class NormalFormGame {
 
                     //region P2 utilities paired with P1's probabilities
                     for (int j = 0; j < nCol; j++) {
+                        // Same thing as with P1 but with the offsets so indexes line up
                         int idx = 0;
                         for (int i = 0; i < nRow; i++) {
                             if (rowSubset[i]) {
@@ -322,6 +325,8 @@ public class NormalFormGame {
 
                     //region Define Lower Bounds
                     double[] lb = new double[nVariables];
+
+                    // Utilities need to be bounded by minUtil if it is less than 0 (it already is initialized to 0)
                     lb[nVariables-2] = minUtil;
                     lb[nVariables-1] = minUtil;
                     //endregion
@@ -346,7 +351,7 @@ public class NormalFormGame {
                     }
                     lp.setLowerbound(lb);
                     LinearProgramming.showLP(lp);
-                    double[] x = new double[c.length];
+                    double[] x;
                     x = LinearProgramming.solveLP(lp);
                     LinearProgramming.showSolution(x, lp);
                     //endregion
