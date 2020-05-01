@@ -26,6 +26,6 @@ public class Prob1 {
         NormalFormGame test = new NormalFormGame(test1, test2, new String[]{"T", "B"}, new String[]{"L", "M", "R"} );
 
         test.showGame();
-        test.doZeroSumNash();
+        test.printZeroSumNash(new String[]{"T", "B"}, new String[]{"L", "M", "R"}, test.doZeroSumNash());
     }
 }

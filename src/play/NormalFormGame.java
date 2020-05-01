@@ -2,11 +2,13 @@ package play;
 
 import lp.LinearProgramming;
 import lp.NashEquilibrium;
+import play.nashEquilibria.ZeroSumStrategy;
 import scpsolver.constraints.LinearEqualsConstraint;
 import scpsolver.constraints.LinearSmallerThanEqualsConstraint;
 import scpsolver.problems.LinearProgram;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class NormalFormGame {
@@ -140,8 +142,8 @@ public class NormalFormGame {
 
     public double[][] doZeroSumNash() {
 
-        double[] strategy2 = new double[nCol];
-        double[] strategy1 = new double[nRow];
+        double[] strategy2;
+        double[] strategy1;
 
 
         ArrayList<Integer> iRow = new ArrayList<>();
@@ -156,7 +158,7 @@ public class NormalFormGame {
 
         int nRows = iRow.size();
         int nCols = jCol.size();
-        
+
         strategy1 = p1ZeroSum(nRows, nCols, iRow, jCol);
 
         strategy2 = p2ZeroSum(nCols, nRows, iRow, jCol);
@@ -165,7 +167,7 @@ public class NormalFormGame {
         return new double[][]{strategy1, strategy2};
     }
 
-    double[] p1ZeroSum(int nRows, int nCols, ArrayList<Integer> iRow, ArrayList<Integer> jCol){
+    double[] p1ZeroSum(int nRows, int nCols, ArrayList<Integer> iRow, ArrayList<Integer> jCol) {
 
         // set P terms to one
         double[] c = new double[nRows + 1];
@@ -189,7 +191,7 @@ public class NormalFormGame {
         // add utilites to X's
         for (int j = 0; j < nCols; j++) {
             for (int i = 0; i < nRows; i++) {
-                A[j][i] = u1[iRow.get(i)][jCol.get(j)];
+                A[j][i] = u2[iRow.get(i)][jCol.get(j)];
                 A[nCols][i] = 1.0;
                 if (A[j][i] < minUtil) {
                     minUtil = A[j][i];
@@ -222,7 +224,7 @@ public class NormalFormGame {
         return x;
     }
 
-    double[] p2ZeroSum(int nCols, int nRows, ArrayList<Integer> iRow, ArrayList<Integer> jCol){
+    double[] p2ZeroSum(int nCols, int nRows, ArrayList<Integer> iRow, ArrayList<Integer> jCol) {
 
         // set P terms to one
         double[] c = new double[nCols + 1];
@@ -244,30 +246,30 @@ public class NormalFormGame {
         double minUtil = 0;
 
         // add utilites to X's
-        for (int j = 0; j < nRows; j++) {
-            for (int i = 0; i < nCols; i++) {
-                A[j][i] = u1[iRow.get(i)][jCol.get(j)];
-                A[nRows][i] = 1.0;
-                if (A[j][i] < minUtil) {
-                    minUtil = A[j][i];
+        for (int i = 0; i < nRows; i++) {
+            for (int j = 0; j < nCols; j++) {
+                A[i][j] = u1[iRow.get(i)][jCol.get(j)];
+                A[nRows][j] = 1.0;
+                if (A[i][j] < minUtil) {
+                    minUtil = A[i][j];
                 }
             }
-            A[j][nCols] = -1.0;
+            A[i][nCols] = -1.0;
         }
 
 
         // Set lower bounds
         double[] lb = new double[nCols + 1];
-        for (int i = 0; i <= nCols; i++) {
-            lb[i] = 0;
+        for (int j = 0; j <= nCols; j++) {
+            lb[j] = 0;
         }
         lb[nCols] = minUtil;
 
 
         LinearProgram lp = new LinearProgram(c);
         lp.setMinProblem(true);
-        for (int j = 0; j < nRows; j++) {
-            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[j], b[j], "c" + j));
+        for (int i = 0; i < nRows; i++) {
+            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
         }
         lp.addConstraint(new LinearEqualsConstraint(A[nRows], b[nRows], "c" + nRows));
         lp.setLowerbound(lb);
@@ -275,10 +277,10 @@ public class NormalFormGame {
         double[] x = new double[c.length];
         x = LinearProgramming.solveLP(lp);
         LinearProgramming.showSolution(x, lp);
-        return null;
+        return x;
     }
 
-    public double[][] doAllGeneralSum(){
+    public double[][] doAllGeneralSum() {
         ArrayList<double[]> equilibria = new ArrayList<>();
 
         ArrayList<Integer> iRow = new ArrayList<>();
@@ -316,7 +318,7 @@ public class NormalFormGame {
             for (boolean[] rowSubset : rowSubsets) {
                 for (boolean[] colSubset : colSubsets) {
                     double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize, iCol, iRow);
-                    if(res != null){
+                    if (res != null) {
                         equilibria.add(res);
                     }
                 }
@@ -328,106 +330,107 @@ public class NormalFormGame {
     }
 
     double[] doGeneralSum(boolean[] rowSubset, boolean[] colSubset, int nVariables, int nConstraints, int subsetSize, ArrayList<Integer> iCol, ArrayList<Integer> iRow) {
-                    System.out.print("TESTING SUBSET ");
-                    NashEquilibrium.showSubset(rowSubset);
-                    System.out.print(" x ");
-                    NashEquilibrium.showSubset(colSubset);
-                    System.out.println();
+        System.out.print("TESTING SUBSET ");
+        NashEquilibrium.showSubset(rowSubset);
+        System.out.print(" x ");
+        NashEquilibrium.showSubset(colSubset);
+        System.out.println();
 
-                    double minUtil = 0;
+        double minUtil = 0;
 
-                    //region Define Cs
-                    double[] c = new double[nVariables]; // All zeros. We're using a function
-                    //endregion
+        //region Define Cs
+        double[] c = new double[nVariables]; // All zeros. We're using a function
+        //endregion
 
-                    //region Define Bs
-                    double[] b = new double[nConstraints];
-                    // Make sure all probabilities add to one (last two rows of constraints)
-                    b[nConstraints-2] = 1.0;
-                    b[nConstraints-1] = 1.0;
-                    //endregion
+        //region Define Bs
+        double[] b = new double[nConstraints];
+        // Make sure all probabilities add to one (last two rows of constraints)
+        b[nConstraints - 2] = 1.0;
+        b[nConstraints - 1] = 1.0;
+        //endregion
 
-                    //region Define constraints
-                    double[][] A = new double[nConstraints][nVariables];
+        //region Define constraints
+        double[][] A = new double[nConstraints][nVariables];
 
-                    //region P1 utilities paired with P2's probabilities
-                    for (int i = 0; i < nRow; i++) {
-                        int idx = subsetSize; // Gets incremented as we find subset elements
-                        for (int j = 0; j < nCol; j++) {
-                            if (colSubset[j]) {
-                                double util = u1[iRow.get(i)][iCol.get(j)]; // Get utility from NormalGame
-                                A[i][idx] = util; // Add utility multiplied by the P2's action probability
+        //region P1 utilities paired with P2's probabilities
+        for (int i = 0; i < nRow; i++) {
+            int idx = subsetSize; // Gets incremented as we find subset elements
+            for (int j = 0; j < nCol; j++) {
+                if (colSubset[j]) {
+                    double util = u1[iRow.get(i)][iCol.get(j)]; // Get utility from NormalGame
+                    A[i][idx] = util; // Add utility multiplied by the P2's action probability
 
-                                idx++; // Found subset element, get next index ready
-                                if(util < minUtil)
-                                    minUtil = util;
-                            }
-                        }
-                        A[i][nVariables - 2] = -1.0;
-                    }
-                    //endregion
-                    System.out.print("");
+                    idx++; // Found subset element, get next index ready
+                    if (util < minUtil)
+                        minUtil = util;
+                }
+            }
+            A[i][nVariables - 2] = -1.0;
+        }
+        //endregion
+        System.out.print("");
 
-                    //region P2 utilities paired with P1's probabilities
-                    for (int j = 0; j < nCol; j++) {
-                        // Same thing as with P1 but with the offsets so indexes line up
-                        int idx = 0;
-                        for (int i = 0; i < nRow; i++) {
-                            if (rowSubset[i]) {
-                                double util = u2[iRow.get(i)][iCol.get(j)];
-                                A[j + nRow][idx] = util;
+        //region P2 utilities paired with P1's probabilities
+        for (int j = 0; j < nCol; j++) {
+            // Same thing as with P1 but with the offsets so indexes line up
+            int idx = 0;
+            for (int i = 0; i < nRow; i++) {
+                if (rowSubset[i]) {
+                    double util = u2[iRow.get(i)][iCol.get(j)];
+                    A[j + nRow][idx] = util;
 
-                                idx++;
+                    idx++;
 
-                                if(util < minUtil)
-                                    minUtil = util;
-                            }
-                        }
-                        A[j+nRow][nVariables - 1] = -1.0;
-                    }
-                    //endregion
+                    if (util < minUtil)
+                        minUtil = util;
+                }
+            }
+            A[j + nRow][nVariables - 1] = -1.0;
+        }
+        //endregion
 
-                    System.out.print("");
+        System.out.print("");
 
-                    for (int j = 0; j < subsetSize; j++) {
-                        A[nConstraints - 2][j] = 1.0;
-                        A[nConstraints - 1][subsetSize + j] = 1.0;
-                    }
-                    //endregion
+        for (int j = 0; j < subsetSize; j++) {
+            A[nConstraints - 2][j] = 1.0;
+            A[nConstraints - 1][subsetSize + j] = 1.0;
+        }
+        //endregion
 
-                    //region Define Lower Bounds
-                    double[] lb = new double[nVariables];
+        //region Define Lower Bounds
+        double[] lb = new double[nVariables];
 
-                    // Utilities need to be bounded by minUtil if it is less than 0 (it already is initialized to 0)
-                    lb[nVariables-2] = minUtil;
-                    lb[nVariables-1] = minUtil;
-                    //endregion
+        // Utilities need to be bounded by minUtil if it is less than 0 (it already is initialized to 0)
+        lb[nVariables - 2] = minUtil;
+        lb[nVariables - 1] = minUtil;
+        //endregion
 
-                    //region Define LP
-                    LinearProgram lp = new LinearProgram(c);
-                    lp.setMinProblem(true);
-                    for (int i = 0; i < nConstraints; i++) {
-                        if(i < nRow) {
-                            if(rowSubset[i])
-                                lp.addConstraint(new LinearEqualsConstraint(A[i], b[i], "c" + i));
-                            else
-                                lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
-                        } else if(i < nRow + nCol){
-                            if(colSubset[i-nRow])
-                                lp.addConstraint(new LinearEqualsConstraint(A[i], b[i], "c" + i));
-                            else
-                                lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
-                        } else{
-                            lp.addConstraint(new LinearEqualsConstraint(A[i], b[i], "c" + i));
-                        }
-                    }
-                    lp.setLowerbound(lb);
-                    LinearProgramming.showLP(lp);
-                    double[] x;
-                    x = LinearProgramming.solveLP(lp);
-                    LinearProgramming.showSolution(x, lp);
-                    //endregion
+        //region Define LP
+        LinearProgram lp = new LinearProgram(c);
+        lp.setMinProblem(true);
+        for (int i = 0; i < nConstraints; i++) {
+            if (i < nRow) {
+                if (rowSubset[i])
+                    lp.addConstraint(new LinearEqualsConstraint(A[i], b[i], "c" + i));
+                else
+                    lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
+            } else if (i < nRow + nCol) {
+                if (colSubset[i - nRow])
+                    lp.addConstraint(new LinearEqualsConstraint(A[i], b[i], "c" + i));
+                else
+                    lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
+            } else {
+                lp.addConstraint(new LinearEqualsConstraint(A[i], b[i], "c" + i));
+            }
+        }
+        lp.setLowerbound(lb);
+        LinearProgramming.showLP(lp);
+        double[] x;
+        x = LinearProgramming.solveLP(lp);
+        LinearProgramming.showSolution(x, lp);
+        //endregion
 
+        System.out.println(Arrays.toString(x));
         return x;
     }
 
@@ -467,12 +470,28 @@ public class NormalFormGame {
             for (boolean[] rowSubset : rowSubsets) {
                 for (boolean[] colSubset : colSubsets) {
                     double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize, iCol, iRow);
-                    if(res != null){
+                    if (res != null) {
                         return res;
                     }
                 }
             }
         }
         return null;
+    }
+
+    public void printZeroSumNash(String[] labelsP1, String[] labelsP2, double[][] zeroSumNash) {
+        System.out.println("****ZERO SUM NASH EQUILIBRIUM****");
+        System.out.println("Player 1:");
+        for (int i = 0; i < labelsP1.length; i++) {
+            System.out.println("  " + showLabel(labelsP1[i]) + ": " + (Math.round(zeroSumNash[0][i] * 100.0) / 100.0));
+        }
+        System.out.println("Player 2:");
+        for (int i = 0; i < labelsP2.length; i++) {
+            System.out.println("  " + showLabel(labelsP2[i]) + ": " + (Math.round(zeroSumNash[1][i] * 100.0) / 100.0));
+        }
+    }
+
+    public static String showLabel(String label) {
+        return label.substring(label.lastIndexOf(':')+1);
     }
 }
