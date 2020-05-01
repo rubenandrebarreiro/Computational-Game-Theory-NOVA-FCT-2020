@@ -282,19 +282,6 @@ public class NormalFormGame {
     public double[][][] doAllGeneralSum() {
         ArrayList<double[][]> equilibria = new ArrayList<>();
 
-        ArrayList<Integer> iRow = new ArrayList<>();
-        for (int i = 0; i < nRow; i++)
-            if (pRow[i])
-                iRow.add(i);
-
-        ArrayList<Integer> iCol = new ArrayList<>();
-        for (int i = 0; i < nCol; i++)
-            if (pCol[i])
-                iCol.add(i);
-
-        int nRow = iRow.size();
-        int nCol = iCol.size();
-
         int nConstraints = nRow + nCol + 2;
 
 
@@ -316,7 +303,7 @@ public class NormalFormGame {
             // Do all this for every combination of subsets
             for (boolean[] rowSubset : rowSubsets) {
                 for (boolean[] colSubset : colSubsets) {
-                    double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize, iCol, iRow);
+                    double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize);
                     if (res != null) {
                         double[] p1 = new double[nRow];
                         double[] p2 = new double[nCol];
@@ -350,12 +337,25 @@ public class NormalFormGame {
         return ret;
     }
 
-    double[] doGeneralSum(boolean[] rowSubset, boolean[] colSubset, int nVariables, int nConstraints, int subsetSize, ArrayList<Integer> iCol, ArrayList<Integer> iRow) {
+    double[] doGeneralSum(boolean[] rowSubset, boolean[] colSubset, int nVariables, int nConstraints, int subsetSize) {
         System.out.print("TESTING SUBSET ");
         NashEquilibrium.showSubset(rowSubset);
         System.out.print(" x ");
         NashEquilibrium.showSubset(colSubset);
         System.out.println();
+
+        ArrayList<Integer> iRow = new ArrayList<>();
+        for (int i = 0; i < nRow; i++)
+            if (pRow[i])
+                iRow.add(i);
+
+        ArrayList<Integer> jCol = new ArrayList<>();
+        for (int i = 0; i < nCol; i++)
+            if (pCol[i])
+                jCol.add(i);
+
+        int nRow = iRow.size();
+        int nCol = jCol.size();
 
         double minUtil = 0;
 
@@ -378,7 +378,7 @@ public class NormalFormGame {
             int idx = subsetSize; // Gets incremented as we find subset elements
             for (int j = 0; j < nCol; j++) {
                 if (colSubset[j]) {
-                    double util = u1[iRow.get(i)][iCol.get(j)]; // Get utility from NormalGame
+                    double util = u1[iRow.get(i)][jCol.get(j)]; // Get utility from NormalGame
                     A[i][idx] = util; // Add utility multiplied by the P2's action probability
 
                     idx++; // Found subset element, get next index ready
@@ -397,7 +397,7 @@ public class NormalFormGame {
             int idx = 0;
             for (int i = 0; i < nRow; i++) {
                 if (rowSubset[i]) {
-                    double util = u2[iRow.get(i)][iCol.get(j)];
+                    double util = u2[iRow.get(i)][jCol.get(j)];
                     A[j + nRow][idx] = util;
 
                     idx++;
@@ -456,18 +456,6 @@ public class NormalFormGame {
     }
 
     public double[][] doFirstGeneralSum() {
-        ArrayList<Integer> iRow = new ArrayList<>();
-        for (int i = 0; i < nRow; i++)
-            if (pRow[i])
-                iRow.add(i);
-
-        ArrayList<Integer> iCol = new ArrayList<>();
-        for (int i = 0; i < nCol; i++)
-            if (pCol[i])
-                iCol.add(i);
-
-        int nRow = iRow.size();
-        int nCol = iCol.size();
 
         int nConstraints = nRow + nCol + 2;
 
@@ -490,7 +478,7 @@ public class NormalFormGame {
             // Do all this for every combination of subsets until you find the first
             for (boolean[] rowSubset : rowSubsets) {
                 for (boolean[] colSubset : colSubsets) {
-                    double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize, iCol, iRow);
+                    double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize);
                     if (res != null) {
                         double[] p1 = new double[nRow];
                         double[] p2 = new double[nCol];

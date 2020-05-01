@@ -24,38 +24,43 @@ public class NashEquilibrium {
         showSubSets(s1);
     }
 
-    public static List<boolean[]> getSubSets(int j, int subsetSize, int nActions, boolean[] p) {
-        boolean[] b = new boolean[nActions];
-        List<boolean[]> subset = new ArrayList<boolean[]>();
-        if (subsetSize == 0)
-        {
+    public static List<boolean[]> getSubSets(int j, int support_size, int total_actions, boolean[] p) {
+        boolean[] b = new boolean[total_actions];
+        List<boolean[]> subset = new ArrayList<>();
+        if (support_size == 0) {
+            for (int i = 0; i < b.length; i++)
+                b[i] = false;
+
             subset.add(b);
-        }
-        else
-        {
-            int nPTrue = 0;
+
+        } else {
+            int op = 0;
 
             for (int i = j; i < p.length; i++)
-                if (p[i])
-                    nPTrue++;
 
-            if (nPTrue == subsetSize) {
+                if (p[i])
+                    op++;
+
+            if (op == support_size) {
+
                 for (int i = 0; i < b.length; i++)
                     if (p[i])
                         b[i] = true;
+
                 subset.add(b);
+
             } else {
                 if (p[j]) {
-                    List<boolean[]> s1 = getSubSets(j + 1, subsetSize - 1, nActions, p);
-                    for (int i = 0; i < s1.size(); i++) {
-                        b = s1.get(i);
+                    List<boolean[]> s1 = getSubSets(j + 1, support_size - 1, total_actions, p);
+                    for (boolean[] booleans : s1) {
+                        b = booleans;
                         b[j] = true;
                         subset.add(b);
                     }
                 }
-                List<boolean[]> s0 = getSubSets(j + 1, subsetSize, nActions, p);
-                for (int i = 0; i < s0.size(); i++) {
-                    b = s0.get(i);
+                List<boolean[]> s0 = getSubSets(j + 1, support_size, total_actions, p);
+                for (boolean[] booleans : s0) {
+                    b = booleans;
                     b[j] = false;
                     subset.add(b);
                 }
