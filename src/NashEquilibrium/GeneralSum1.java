@@ -30,6 +30,6 @@ public class GeneralSum1 {
         NormalFormGame test = new NormalFormGame(test1, test2, new String[]{"a", "c", "b"}, new String[]{"C", "B", "A"} );
 
         test.showGame();
-        test.doFirstGeneralSum();
+        test.doGeneralSum();
     }
 }

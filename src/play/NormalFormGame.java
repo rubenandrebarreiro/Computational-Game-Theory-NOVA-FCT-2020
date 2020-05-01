@@ -222,7 +222,7 @@ public class NormalFormGame {
         return new double[][]{{}, {}};
     }
 
-    public double[][] doFirstGeneralSum() {
+    public double[][] doGeneralSum() {
         ArrayList<Integer> iRow = new ArrayList<>();
         for (int i = 0; i < nRow; i++)
             if (pRow[i])
