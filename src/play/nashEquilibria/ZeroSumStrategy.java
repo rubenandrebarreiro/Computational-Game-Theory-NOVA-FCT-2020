@@ -95,7 +95,9 @@ public class ZeroSumStrategy extends Strategy {
 				game.showGame();
 
 				double[][] zeroSumNash = game.doZeroSumNash();
-				game.printZeroSumNash(labelsP1, labelsP2, zeroSumNash);
+
+				System.out.println("****ZERO SUM NASH EQUILIBRIUM****");
+				game.printNash(labelsP1, labelsP2, zeroSumNash);
 
 				double[] strategyP1 = setStrategy(1, labelsP1, myStrategy);
 				double[] strategyP2 = setStrategy(2, labelsP2, myStrategy);

@@ -2,7 +2,6 @@ package play;
 
 import lp.LinearProgramming;
 import lp.NashEquilibrium;
-import play.nashEquilibria.ZeroSumStrategy;
 import scpsolver.constraints.LinearEqualsConstraint;
 import scpsolver.constraints.LinearSmallerThanEqualsConstraint;
 import scpsolver.problems.LinearProgram;
@@ -280,8 +279,8 @@ public class NormalFormGame {
         return x;
     }
 
-    public double[][] doAllGeneralSum() {
-        ArrayList<double[]> equilibria = new ArrayList<>();
+    public double[][][] doAllGeneralSum() {
+        ArrayList<double[][]> equilibria = new ArrayList<>();
 
         ArrayList<Integer> iRow = new ArrayList<>();
         for (int i = 0; i < nRow; i++)
@@ -319,13 +318,35 @@ public class NormalFormGame {
                 for (boolean[] colSubset : colSubsets) {
                     double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize, iCol, iRow);
                     if (res != null) {
-                        equilibria.add(res);
+                        double[] p1 = new double[nRow];
+                        double[] p2 = new double[nCol];
+
+                        int count = 0;
+                        for(int i = 0; i < nRow; i++){
+                            if(rowSubset[i]) {
+                                p1[i] = res[count];
+                                count++;
+                            }
+                            else
+                                p1[i] = 0.0;
+                        }
+
+                        for (int j = 0; j < nCol; j++) {
+                            if(colSubset[j]) {
+                                p2[j] = res[count];
+                                count++;
+                            }
+                            else
+                                p2[j] = 0.0;
+                        }
+                        double[][] cleanRes = new double[][]{p1, p2};
+                        equilibria.add(cleanRes);
                     }
                 }
             }
         }
-        double[][] ret = new double[0][];
-        equilibria.toArray(ret);
+        double[][][] ret = new double[0][][];
+        ret = equilibria.toArray(ret);
         return ret;
     }
 
@@ -434,7 +455,7 @@ public class NormalFormGame {
         return x;
     }
 
-    public double[] doFirstGeneralSum() {
+    public double[][] doFirstGeneralSum() {
         ArrayList<Integer> iRow = new ArrayList<>();
         for (int i = 0; i < nRow; i++)
             if (pRow[i])
@@ -471,7 +492,29 @@ public class NormalFormGame {
                 for (boolean[] colSubset : colSubsets) {
                     double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize, iCol, iRow);
                     if (res != null) {
-                        return res;
+                        double[] p1 = new double[nRow];
+                        double[] p2 = new double[nCol];
+
+                        int count = 0;
+                        for(int i = 0; i < nRow; i++){
+                            if(rowSubset[i]) {
+                                p1[i] = res[count];
+                                count++;
+                            }
+                            else
+                                p1[i] = 0.0;
+                        }
+
+                        for (int j = 0; j < nCol; j++) {
+                            if(colSubset[j]) {
+                                p2[j] = res[count];
+                                count++;
+                            }
+                            else
+                                p2[j] = 0.0;
+                        }
+                        double[][] cleanRes = new double[][]{p1, p2};
+                        return cleanRes;
                     }
                 }
             }
@@ -479,15 +522,14 @@ public class NormalFormGame {
         return null;
     }
 
-    public void printZeroSumNash(String[] labelsP1, String[] labelsP2, double[][] zeroSumNash) {
-        System.out.println("****ZERO SUM NASH EQUILIBRIUM****");
+    public void printNash(String[] labelsP1, String[] labelsP2, double[][] nash) {
         System.out.println("Player 1:");
         for (int i = 0; i < labelsP1.length; i++) {
-            System.out.println("  " + showLabel(labelsP1[i]) + ": " + (Math.round(zeroSumNash[0][i] * 100.0) / 100.0));
+            System.out.println("  " + showLabel(labelsP1[i]) + ": " + (Math.round(nash[0][i] * 100.0) / 100.0));
         }
         System.out.println("Player 2:");
         for (int i = 0; i < labelsP2.length; i++) {
-            System.out.println("  " + showLabel(labelsP2[i]) + ": " + (Math.round(zeroSumNash[1][i] * 100.0) / 100.0));
+            System.out.println("  " + showLabel(labelsP2[i]) + ": " + (Math.round(nash[1][i] * 100.0) / 100.0));
         }
     }
 

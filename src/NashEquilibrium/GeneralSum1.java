@@ -30,7 +30,13 @@ public class GeneralSum1 {
         NormalFormGame test = new NormalFormGame(test1, test2, new String[]{"a", "c", "b"}, new String[]{"C", "B", "A"} );
 
         test.showGame();
-        test.doAllGeneralSum();
-        test.doFirstGeneralSum();
+        double[][][] asd = test.doAllGeneralSum();
+        for (int i = 0; i < asd.length; i++) {
+            System.out.println("*** GENERAL SUM EQUILIBRIUM: " + i + " ***");
+            test.printNash(new String[]{"a", "c", "b"}, new String[]{"C", "B", "A"}, asd[i]);
+        }
+        double[][] dsa = test.doFirstGeneralSum();
+        System.out.println("***GENERAL SUM EQUILIBRIUM***");
+        test.printNash(new String[]{"a", "c", "b"}, new String[]{"C", "B", "A"}, dsa);
     }
 }
