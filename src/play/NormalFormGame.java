@@ -156,8 +156,16 @@ public class NormalFormGame {
 
         int nRows = iRow.size();
         int nCols = jCol.size();
+        
+        strategy1 = p1ZeroSum(nRows, nCols, iRow, jCol);
 
-        //region Player 1 perspective
+        strategy2 = p2ZeroSum(nCols, nRows, iRow, jCol);
+
+
+        return new double[][]{strategy1, strategy2};
+    }
+
+    double[] p1ZeroSum(int nRows, int nCols, ArrayList<Integer> iRow, ArrayList<Integer> jCol){
 
         // set P terms to one
         double[] c = new double[nRows + 1];
@@ -211,18 +219,68 @@ public class NormalFormGame {
         x = LinearProgramming.solveLP(lp);
         LinearProgramming.showSolution(x, lp);
 
-        //endregion
-
-        //region Player 2 Perspective
-
-        //TODO: Inverted of Player 1
-
-        //endregion
-
-        return new double[][]{{}, {}};
+        return x;
     }
 
-    public double[][] doGeneralSum() {
+    double[] p2ZeroSum(int nCols, int nRows, ArrayList<Integer> iRow, ArrayList<Integer> jCol){
+
+        // set P terms to one
+        double[] c = new double[nCols + 1];
+        for (int i = 0; i < nCols; i++) {
+            c[i] = 0.0;
+        }
+        c[nCols] = 1.0;
+
+        // set constraints independent term to
+        // utilities of row to dominate
+        double[] b = new double[nRows + 1];
+        for (int j = 0; j < nRows; j++) {
+            b[j] = 0.0;
+        }
+        b[nRows] = 1;
+
+        // constraints matrix
+        double[][] A = new double[nRows + 1][nCols + 1];
+        double minUtil = 0;
+
+        // add utilites to X's
+        for (int j = 0; j < nRows; j++) {
+            for (int i = 0; i < nCols; i++) {
+                A[j][i] = u1[iRow.get(i)][jCol.get(j)];
+                A[nRows][i] = 1.0;
+                if (A[j][i] < minUtil) {
+                    minUtil = A[j][i];
+                }
+            }
+            A[j][nCols] = -1.0;
+        }
+
+
+        // Set lower bounds
+        double[] lb = new double[nCols + 1];
+        for (int i = 0; i <= nCols; i++) {
+            lb[i] = 0;
+        }
+        lb[nCols] = minUtil;
+
+
+        LinearProgram lp = new LinearProgram(c);
+        lp.setMinProblem(true);
+        for (int j = 0; j < nRows; j++) {
+            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[j], b[j], "c" + j));
+        }
+        lp.addConstraint(new LinearEqualsConstraint(A[nRows], b[nRows], "c" + nRows));
+        lp.setLowerbound(lb);
+        LinearProgramming.showLP(lp);
+        double[] x = new double[c.length];
+        x = LinearProgramming.solveLP(lp);
+        LinearProgramming.showSolution(x, lp);
+        return null;
+    }
+
+    public double[][] doAllGeneralSum(){
+        ArrayList<double[]> equilibria = new ArrayList<>();
+
         ArrayList<Integer> iRow = new ArrayList<>();
         for (int i = 0; i < nRow; i++)
             if (pRow[i])
@@ -240,6 +298,7 @@ public class NormalFormGame {
 
 
         int maxSubsetSize = Math.min(nRow, nCol);
+
         for (int subsetSize = 1; subsetSize <= maxSubsetSize; subsetSize++) {
             System.out.println("Size: " + subsetSize + "x" + subsetSize);
             List<boolean[]> rowSubsets = NashEquilibrium.getSubSets(0, subsetSize, nRow, pRow);
@@ -256,6 +315,19 @@ public class NormalFormGame {
             // Do all this for every combination of subsets
             for (boolean[] rowSubset : rowSubsets) {
                 for (boolean[] colSubset : colSubsets) {
+                    double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize, iCol, iRow);
+                    if(res != null){
+                        equilibria.add(res);
+                    }
+                }
+            }
+        }
+        double[][] ret = new double[0][];
+        equilibria.toArray(ret);
+        return ret;
+    }
+
+    double[] doGeneralSum(boolean[] rowSubset, boolean[] colSubset, int nVariables, int nConstraints, int subsetSize, ArrayList<Integer> iCol, ArrayList<Integer> iRow) {
                     System.out.print("TESTING SUBSET ");
                     NashEquilibrium.showSubset(rowSubset);
                     System.out.print(" x ");
@@ -355,10 +427,52 @@ public class NormalFormGame {
                     x = LinearProgramming.solveLP(lp);
                     LinearProgramming.showSolution(x, lp);
                     //endregion
+
+        return x;
+    }
+
+    public double[] doFirstGeneralSum() {
+        ArrayList<Integer> iRow = new ArrayList<>();
+        for (int i = 0; i < nRow; i++)
+            if (pRow[i])
+                iRow.add(i);
+
+        ArrayList<Integer> iCol = new ArrayList<>();
+        for (int i = 0; i < nCol; i++)
+            if (pCol[i])
+                iCol.add(i);
+
+        int nRow = iRow.size();
+        int nCol = iCol.size();
+
+        int nConstraints = nRow + nCol + 2;
+
+
+        int maxSubsetSize = Math.min(nRow, nCol);
+
+        for (int subsetSize = 1; subsetSize <= maxSubsetSize; subsetSize++) {
+            System.out.println("Size: " + subsetSize + "x" + subsetSize);
+            List<boolean[]> rowSubsets = NashEquilibrium.getSubSets(0, subsetSize, nRow, pRow);
+
+            List<boolean[]> colSubsets = NashEquilibrium.getSubSets(0, subsetSize, nCol, pCol);
+
+            NashEquilibrium.showSubSets(rowSubsets);
+            System.out.print("x ");
+            NashEquilibrium.showSubSets(colSubsets);
+            System.out.print("\n");
+
+            int nVariables = subsetSize * 2 + 2;
+
+            // Do all this for every combination of subsets until you find the first
+            for (boolean[] rowSubset : rowSubsets) {
+                for (boolean[] colSubset : colSubsets) {
+                    double[] res = doGeneralSum(rowSubset, colSubset, nVariables, nConstraints, subsetSize, iCol, iRow);
+                    if(res != null){
+                        return res;
+                    }
                 }
             }
         }
-
-        return new double[][]{{}, {}};
+        return null;
     }
 }
