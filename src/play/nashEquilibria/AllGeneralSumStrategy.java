@@ -96,8 +96,8 @@ public class AllGeneralSumStrategy extends Strategy {
 
 				double[][][] generalSumNash = game.doAllGeneralSum();
 				for (int k = 0; k < generalSumNash.length; k++) {
-					System.out.println("*** GENERAL SUM EQUILIBRIUM: " + k + " ***");
-					game.printNash(labelsP1, labelsP2, generalSumNash[k]);
+					System.out.println("*** GENERAL SUM EQUILIBRIUM: " + k + "***");
+					game.printGeneralNash(labelsP1, labelsP2, generalSumNash[k]);
 				}
 
 				double[] strategyP1 = setStrategy(1, labelsP1, myStrategy);
