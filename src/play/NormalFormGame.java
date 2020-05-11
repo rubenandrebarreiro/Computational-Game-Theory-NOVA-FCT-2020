@@ -2,7 +2,6 @@ package play;
 
 import lp.LinearProgramming;
 import lp.NashEquilibrium;
-import scpsolver.constraints.LinearBiggerThanEqualsConstraint;
 import scpsolver.constraints.LinearEqualsConstraint;
 import scpsolver.constraints.LinearSmallerThanEqualsConstraint;
 import scpsolver.problems.LinearProgram;
@@ -520,15 +519,15 @@ public class NormalFormGame {
         return null;
     }
 
-    public double[] doZeroSumMaxMinForPlayer1() {
+    public double[] doMaxMinP1(String[] labelsP1, String[] labelsP2) {
 
-        double[][] utilitiesSymmetryForPlayer2 = u1;
+        double[][] negU1 = new double[nRow][nCol];
 
         for(int i = 0; i < nRow; i++) {
 
             for(int j = 0; j < nCol; j++) {
 
-                utilitiesSymmetryForPlayer2[i][j] *= -1;
+                negU1[i][j] = u1[i][j] * -1;
 
             }
 
@@ -537,10 +536,12 @@ public class NormalFormGame {
         System.out.println("******** Maxmin Strategy Player 1 ********");
 
 
-        NormalFormGame normalFormGameMaxMinForPlayer1 = new NormalFormGame( u1, utilitiesSymmetryForPlayer2,
-                                            (String[]) rowActions.toArray(), (String[]) colActions.toArray());
+        NormalFormGame newGame = new NormalFormGame( u1, negU1, labelsP1, labelsP2);
 
-        normalFormGameMaxMinForPlayer1.showGame();
+        /*newGame.showGame();
+        Dominance.solveDomination(newGame);
+        newGame.showGame();*/
+
 
         System.out.println("******** ZeroSum Game Strategy Player 1 ********");
 
@@ -549,7 +550,7 @@ public class NormalFormGame {
         os Cs é o que está a ser minimizado
          */
 
-        int nVariables = nRow + 1;
+        /*int nVariables = nRow + 1;
         int nConstraints = nCol + 1;
 
         //region Define Cs
@@ -621,19 +622,20 @@ public class NormalFormGame {
 
         System.out.println(Arrays.toString(x));
 
-        return x;
+        return x;*/
 
+        return newGame.doZeroSumNash()[0];
     }
 
-    public double[] doZeroSumMaxMinForPlayer2() {
+    public double[] doMaxMinP2(String[] labelsP1, String[] labelsP2) {
 
-        double[][] utilitiesSymmetryForPlayer1 = u2;
+        double[][] negU2 = new double[nRow][nCol];
 
         for(int i = 0; i < nRow; i++) {
 
             for(int j = 0; j < nCol; j++) {
 
-                utilitiesSymmetryForPlayer1[i][j] *= -1;
+                negU2[i][j] = u2[i][j] * -1;
 
             }
 
@@ -642,116 +644,12 @@ public class NormalFormGame {
         System.out.println("******** Maxmin Strategy Player 2 ********");
 
 
-        NormalFormGame normalFormGameMaxMinForPlayer2 = new NormalFormGame( utilitiesSymmetryForPlayer1, u2,
-                (String[]) rowActions.toArray(), (String[]) colActions.toArray());
+        NormalFormGame newGame = new NormalFormGame( negU2, u2, labelsP1, labelsP2);
 
-        normalFormGameMaxMinForPlayer2.showGame();
+        /*newGame.showGame();
+        Dominance.solveDomination(newGame);
+        newGame.showGame();*/
 
-        System.out.println("******** ZeroSum Game Strategy Player 2 ********");
-
-        /*
-        os Bs é o que vem depois do igual
-        os Cs é o que está a ser minimizado
-         */
-
-        int nVariables = nCol + 1;
-        int nConstraints = nRow + 1;
-
-        //region Define Cs
-        double[] c = new double[nVariables]; // All ones. We're using a function
-        Arrays.fill(c, 1);
-        //endregion
-
-        //region Define Bs
-        double[] b = new double[nConstraints];
-        b[b.length - 1] = 1.0;
-
-        //region Define constraints
-        double[][] A = new double[nConstraints][nVariables];
-
-        //region P1 utilities paired with P2's probabilities
-        for (int i = 0; i < (nConstraints - 1); i++) {
-
-            for(int j = 0; j < (nVariables - 1); j++) {
-
-                double util = utilitiesSymmetryForPlayer1[i][j];
-
-                A[i][j] = util;
-
-            }
-
-            A[i][nVariables - 2] = -1.0;
-
-        }
-
-        double minUtil = Double.MAX_VALUE;
-
-        for (int i = 0; i < (nConstraints - 1); i++) {
-
-            for (int j = 0; j < (nVariables - 1); j++) {
-
-                minUtil = Double.min(minUtil, A[i][j]);
-
-            }
-
-        }
-
-        //region Define Lower Bounds
-        double[] lb = new double[nVariables];
-
-        // Utilities need to be bounded by minUtil if it is less than 0 (it already is initialized to 0)
-        lb[nVariables - 2] = minUtil;
-        lb[nVariables - 1] = minUtil;
-        //endregion
-
-        LinearProgram lp = new LinearProgram(c);
-        lp.setMinProblem(true);
-
-        for (int i = 0; i < ( nConstraints - 1); i++) {
-            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
-        }
-
-        double[] constraintsLastRow = new double[nVariables];
-        Arrays.fill(constraintsLastRow, 1);
-        constraintsLastRow[constraintsLastRow.length - 1] = 0.0;
-        lp.addConstraint(new LinearEqualsConstraint(constraintsLastRow, b[b.length-1], "c" + (b.length-1)));
-
-        lp.setLowerbound(lb);
-        LinearProgramming.showLP(lp);
-        double[] x;
-
-        x = LinearProgramming.solveLP(lp);
-        LinearProgramming.showSolution(x, lp);
-        //endregion
-
-        System.out.println(Arrays.toString(x));
-
-        return x;
-
-    }
-
-
-    public double[] doZeroSumMinMaxForPlayer1() {
-
-        double[][] utilitiesSymmetryForPlayer1 = u2;
-
-        for(int i = 0; i < nRow; i++) {
-
-            for(int j = 0; j < nCol; j++) {
-
-                utilitiesSymmetryForPlayer1[i][j] *= -1;
-
-            }
-
-        }
-
-        System.out.println("******** MinMax Strategy Player 1 ********");
-
-
-        NormalFormGame normalFormGameMaxMinForPlayer1 = new NormalFormGame( utilitiesSymmetryForPlayer1, u2,
-                (String[]) rowActions.toArray(), (String[]) colActions.toArray());
-
-        normalFormGameMaxMinForPlayer1.showGame();
 
         System.out.println("******** ZeroSum Game Strategy Player 1 ********");
 
@@ -760,7 +658,7 @@ public class NormalFormGame {
         os Cs é o que está a ser minimizado
          */
 
-        int nVariables = nRow + 1;
+        /*int nVariables = nRow + 1;
         int nConstraints = nCol + 1;
 
         //region Define Cs
@@ -780,7 +678,7 @@ public class NormalFormGame {
 
             for(int j = 0; j < (nVariables - 1); j++) {
 
-                double util = u2[j][i];
+                double util = utilitiesSymmetryForPlayer2[j][i];
 
                 A[i][j] = util;
 
@@ -832,41 +730,46 @@ public class NormalFormGame {
 
         System.out.println(Arrays.toString(x));
 
-        return x;
+        return x;*/
+
+        return newGame.doZeroSumNash()[1];
 
     }
 
-    public double[] doZeroSumMinMaxForPlayer2() {
 
-        double[][] utilitiesSymmetryForPlayer2 = u1;
+    public double[] doMinMaxP1(String[] labelsP1, String[] labelsP2) {
+
+        double[][] negU2 = new double[nRow][nCol];
 
         for(int i = 0; i < nRow; i++) {
 
             for(int j = 0; j < nCol; j++) {
 
-                utilitiesSymmetryForPlayer2[i][j] *= -1;
+                negU2[i][j] = u2[i][j] * -1;
 
             }
 
         }
 
-        System.out.println("******** Minmax Strategy Player 2 ********");
+        System.out.println("******** Minmax Strategy Player 1 ********");
 
 
-        NormalFormGame normalFormGameMaxMinForPlayer2 = new NormalFormGame( u1, utilitiesSymmetryForPlayer2,
-                (String[]) rowActions.toArray(), (String[]) colActions.toArray());
+        NormalFormGame newGame = new NormalFormGame(negU2, u2, labelsP1, labelsP2);
 
-        normalFormGameMaxMinForPlayer2.showGame();
+        /*newGame.showGame();
+        Dominance.solveDomination(newGame);
+        newGame.showGame();*/
 
-        System.out.println("******** ZeroSum Game Strategy Player 2 ********");
+
+        System.out.println("******** ZeroSum Game Strategy Player 1 ********");
 
         /*
         os Bs é o que vem depois do igual
         os Cs é o que está a ser minimizado
          */
 
-        int nVariables = nCol + 1;
-        int nConstraints = nRow + 1;
+        /*int nVariables = nRow + 1;
+        int nConstraints = nCol + 1;
 
         //region Define Cs
         double[] c = new double[nVariables]; // All ones. We're using a function
@@ -885,7 +788,7 @@ public class NormalFormGame {
 
             for(int j = 0; j < (nVariables - 1); j++) {
 
-                double util = u1[i][j];
+                double util = utilitiesSymmetryForPlayer2[j][i];
 
                 A[i][j] = util;
 
@@ -937,7 +840,118 @@ public class NormalFormGame {
 
         System.out.println(Arrays.toString(x));
 
-        return x;
+        return x;*/
+
+        return newGame.doZeroSumNash()[0];
+
+    }
+
+    public double[] doMinMaxP2(String[] labelsP1, String[] labelsP2) {
+
+        double[][] negU1 = new double[nRow][nCol];
+
+        for(int i = 0; i < nRow; i++) {
+
+            for(int j = 0; j < nCol; j++) {
+
+                negU1[i][j] = u1[i][j] * -1;
+
+            }
+
+        }
+
+        System.out.println("******** Minmax Strategy Player 2 ********");
+
+
+        NormalFormGame newGame = new NormalFormGame( u1, negU1, labelsP1, labelsP2);
+
+        /*newGame.showGame();
+        Dominance.solveDomination(newGame);
+        newGame.showGame();*/
+
+
+        System.out.println("******** ZeroSum Game Strategy Player 1 ********");
+
+        /*
+        os Bs é o que vem depois do igual
+        os Cs é o que está a ser minimizado
+         */
+
+        /*int nVariables = nRow + 1;
+        int nConstraints = nCol + 1;
+
+        //region Define Cs
+        double[] c = new double[nVariables]; // All ones. We're using a function
+        Arrays.fill(c, 1);
+        //endregion
+
+        //region Define Bs
+        double[] b = new double[nConstraints];
+        b[b.length - 1] = 1.0;
+
+        //region Define constraints
+        double[][] A = new double[nConstraints][nVariables];
+
+        //region P1 utilities paired with P2's probabilities
+        for (int i = 0; i < (nConstraints - 1); i++) {
+
+            for(int j = 0; j < (nVariables - 1); j++) {
+
+                double util = utilitiesSymmetryForPlayer2[j][i];
+
+                A[i][j] = util;
+
+            }
+
+            A[i][nVariables - 2] = -1.0;
+
+        }
+
+        double minUtil = Double.MAX_VALUE;
+
+        for (int i = 0; i < (nConstraints - 1); i++) {
+
+            for (int j = 0; j < (nVariables - 1); j++) {
+
+                minUtil = Double.min(minUtil, A[i][j]);
+
+            }
+
+        }
+
+        //region Define Lower Bounds
+        double[] lb = new double[nVariables];
+
+        // Utilities need to be bounded by minUtil if it is less than 0 (it already is initialized to 0)
+        lb[nVariables - 2] = minUtil;
+        lb[nVariables - 1] = minUtil;
+        //endregion
+
+        LinearProgram lp = new LinearProgram(c);
+        lp.setMinProblem(true);
+
+        for (int i = 0; i < ( nConstraints - 1); i++) {
+            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
+        }
+
+        double[] constraintsLastRow = new double[nVariables];
+        Arrays.fill(constraintsLastRow, 1);
+        constraintsLastRow[constraintsLastRow.length - 1] = 0.0;
+        lp.addConstraint(new LinearEqualsConstraint(constraintsLastRow, b[b.length-1], "c" + (b.length-1)));
+
+        lp.setLowerbound(lb);
+        LinearProgramming.showLP(lp);
+        double[] x;
+
+        x = LinearProgramming.solveLP(lp);
+        LinearProgramming.showSolution(x, lp);
+        //endregion
+
+        System.out.println(Arrays.toString(x));
+
+        return x;*/
+
+        return newGame.doZeroSumNash()[1];
 
     }
 
@@ -968,4 +982,11 @@ public class NormalFormGame {
         return label.substring(label.lastIndexOf(':')+1);
     }
 
+    public double[][] doMinmax(String[] labelsP1, String[] labelsP2) {
+        return new double[][] {doMinMaxP1(labelsP1, labelsP2), doMinMaxP2(labelsP1, labelsP2)};
+    }
+
+    public double[][] doMaxMin(String[] labelsP1, String[] labelsP2){
+        return new double[][] {doMaxMinP1(labelsP1, labelsP2), doMaxMinP2(labelsP1, labelsP2)};
+    }
 }
