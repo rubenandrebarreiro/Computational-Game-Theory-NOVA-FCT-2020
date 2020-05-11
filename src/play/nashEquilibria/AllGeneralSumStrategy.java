@@ -60,8 +60,8 @@ public class AllGeneralSumStrategy extends Strategy {
 				int n2 = rootNode.getChildren().next().numberOfChildren();
 				String[] labelsP1 = new String[n1];
 				String[] labelsP2 = new String[n2];
-				int[][] U1 = new int[n1][n2];
-				int[][] U2 = new int[n1][n2];
+				double[][] U1 = new double[n1][n2];
+				double[][] U2 = new double[n1][n2];
 				Iterator<GameNode> childrenNodes1 = rootNode.getChildren();
 				GameNode childNode1;
 				GameNode childNode2;
@@ -126,7 +126,7 @@ public class AllGeneralSumStrategy extends Strategy {
 		for (int i = 0; i<labels.length; i++) System.out.println("   " + showLabel(labels[i]));
 	}
 	
-	public void showUtility(int P, int[][] M) {
+	public void showUtility(int P, double[][] M) {
 		int nLin = M.length;
 		int nCol = M[0].length;
 		System.out.println("Utility Player " + P + ":");
