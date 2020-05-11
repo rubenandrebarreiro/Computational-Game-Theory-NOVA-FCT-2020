@@ -1,4 +1,4 @@
-package play.nashEquilibria;
+package play.maxMin;
 
 import gametree.GameNode;
 import gametree.GameNodeDoesNotExistException;
@@ -10,7 +10,7 @@ import play.exception.InvalidStrategyException;
 
 import java.util.Iterator;
 
-public class ZeroSumStrategy extends Strategy {
+public class MaxMinStrategy extends Strategy {
 
 	@Override
 	public void execute() throws InterruptedException {
@@ -94,10 +94,7 @@ public class ZeroSumStrategy extends Strategy {
 
 				game.showGame();
 
-				double[][] zeroSumNash = game.doZeroSumNash();
-
-				System.out.println("****ZERO SUM NASH EQUILIBRIUM****");
-				game.printNash(labelsP1, labelsP2, zeroSumNash);
+				game.printNash(labelsP1, labelsP2, game.doMaxMin(labelsP1, labelsP2));
 
 				double[] strategyP1 = setStrategy(1, labelsP1, myStrategy);
 				double[] strategyP2 = setStrategy(2, labelsP2, myStrategy);
