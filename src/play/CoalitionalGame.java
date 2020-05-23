@@ -92,7 +92,7 @@ public class CoalitionalGame {
 
 				Double valueWithID = 0.0;
 
-				int j = 0;
+				int j;
 				for(j = 0; j < v.length; j++) {
 
 					if(this.checkSetWithAdditionalID(IDsInSet, id, j)) {
