@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class CoalitionalGame {
@@ -44,71 +45,97 @@ public class CoalitionalGame {
 
 	}
 
+	public int computeFactorial(int num) {
+
+		if (num == 0) {
+
+			return 1;
+
+		}
+		else {
+
+			int fact = 1;
+
+			for(int i = 1; i <= nPlayers; i++) {
+
+				fact = fact * i;
+
+			}
+
+			return fact;
+
+		}
+
+	}
+
 	public double computeShapleyValue(String id) {
 
 		System.out.println("*********** Computing Shapley Values ***********");
 
-		double shapleyValue = 0.0;
+		double shapleyValueSum = 0.0;
 
-		int NFact = 1;
-		int SFact = 1;
-		int factorFact = 1;
-
-		if(nPlayers > 0) {
-
-			for(int i = 1; i <= nPlayers; i++) {
-
-				NFact = NFact * i;
-
-			}
-
-		}
-
-		if(nPlayers > 0) {
-
-			for(int i = 1; i < nPlayers; i++) {
-
-				SFact = SFact * i;
-
-			}
-
-		}
-
-		if(nPlayers > 0) {
-
-			int firstTerm = ( nPlayers - (nPlayers - 1) - 1 );
-
-			if(firstTerm > 0) {
-
-				for (int i = 1; i < firstTerm; i++) {
-
-					factorFact = factorFact * i;
-
-				}
-
-			}
-
-		}
+		int NFact = this.computeFactorial(nPlayers);
 
 		for(int i = 0; i < v.length; i++) {
 
 			if(!this.checkIDInSet(id, i)) {
 
+				int sizeSetWithoutID = this.computeSetSize(i);
+				int SFact = this.computeFactorial(sizeSetWithoutID);
+
+				int NMinusSMinusOne = ( nPlayers - sizeSetWithoutID - 1 );
+				int NMinusSMinusOneFact = this.computeFactorial(NMinusSMinusOne);
+
+				List<String> IDsInSet = this.getIDsInSet(i);
+
+				Double valueWithoutID = v[i];
+
+				Double valueWithID = 0.0;
+
+				int j = 0;
+				for(j = 0; j < v.length; j++) {
+
+					if(this.checkSetWithAdditionalID(IDsInSet, id, j)) {
+
+						valueWithID = v[j];
+
+						break;
+
+					}
+
+				}
+
 				showSet(i);
-				System.out.print(" ("+v[i]+") -> ");
-				showSetWithOtherID(id, i);
-				// TODO
-
+				System.out.print(" ("+valueWithoutID+") -> ");
+				showSet(j);
+				System.out.print(" ("+valueWithID+") ");
 				System.out.print(" ***** gain = ");
-				// TODO
+				System.out.print( ( valueWithID - valueWithoutID ) + " " );
+				System.out.println("(" + 0 + ")"); //TODO - que probs são aquelas a seguir ao ganho????
 
+				shapleyValueSum += ( SFact * NMinusSMinusOneFact * ( valueWithID - valueWithoutID ) );
 
 			}
 
 		}
 
+		return (double) ((double) shapleyValueSum/ (double) NFact);
 
-		return shapleyValue;
+	}
+
+	public boolean verifyIfShapleyValuesVectorIsInTheCore(Map<String, Double> shapleyValuesVector) {
+
+		for(String id : shapleyValuesVector.keySet()) {
+
+			if(shapleyValuesVector.get(id) < this.getValueOfIDAlone(id)) {
+
+				return false;
+
+			}
+
+		}
+
+		return true;
 
 	}
 
@@ -134,7 +161,6 @@ public class CoalitionalGame {
 
 		List<String> setListIDs = new ArrayList<>();
 
-		int cnt = 0;
 		for(int i=0;i<nPlayers;i++) {
 			power = nPlayers - (i+1);
 
@@ -145,6 +171,56 @@ public class CoalitionalGame {
 		}
 
 		return setListIDs.contains(id);
+
+	}
+
+	public Double getValueOfIDAlone(String id) {
+
+		for(int i = 0; i < v.length; i++) {
+
+			if(this.getIDsInSet(i).size() == 1 && this.checkIDInSet(id, i)) {
+
+				return v[i];
+
+			}
+
+		}
+
+		return -1.0;
+
+	}
+
+	public List<String> getIDsInSet(long v) {
+		int power;
+
+		List<String> setListIDs = new ArrayList<>();
+
+		for(int i=0;i<nPlayers;i++) {
+			power = nPlayers - (i+1);
+
+			if (inSet(i, v)) {
+				setListIDs.add(ids[power]);
+			}
+
+		}
+
+		return setListIDs;
+
+	}
+
+	public boolean checkSetWithAdditionalID(List<String> ids, String additionalID, long v) {
+
+		for(String id: ids) {
+
+			if(!this.checkIDInSet(id, v)) {
+
+				return false;
+
+			}
+
+		}
+
+		return this.checkIDInSet(additionalID, v);
 
 	}
 
@@ -171,6 +247,20 @@ public class CoalitionalGame {
 			}
 		}
 		System.out.print("}");
+	}
+
+	public int computeSetSize(long v) {
+		int cnt = 0;
+		for(int i=0;i<nPlayers;i++) {
+
+			if (inSet(i, v)) {
+				cnt++;
+			}
+
+		}
+
+		return cnt;
+
 	}
 
 	public void showSetWithOtherID(String id, long v) {
