@@ -119,7 +119,7 @@ public class CoalitionalGame {
 
 		}
 
-		return (double) ((double) shapleyValueSum/ (double) NFact);
+		return shapleyValueSum / (double) NFact;
 
 	}
 
