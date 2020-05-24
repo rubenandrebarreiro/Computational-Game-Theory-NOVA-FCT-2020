@@ -332,25 +332,44 @@ public class CoalitionalGame {
 	
 	public void permutation(int j, int k, int iZero, long v0) {
 		long value = 0;
+
 		if (k==0) {
+
 			showSet(v0);
+
 		}
 		else {
 			int op = 0;
-			if (iZero < j) op = nPlayers - j;
-			else op = nPlayers - j - 1;
+
+			if (iZero < j)
+				op = nPlayers - j;
+			else
+				op = nPlayers - j - 1;
+
 			if (op==k) {
-				for(int i=j;i<nPlayers;i++) {		
-					if (i != iZero) value += (long) Math.pow(2, nPlayers-(i+1));
+
+				for(int i=j;i<nPlayers;i++) {
+
+					if (i != iZero) value += (long)
+							Math.pow(2, nPlayers-(i+1));
+
 				}
+
 				v0 = v0 + value;
 				showSet(v0);
+
 			}
 			else {	
-				if (j != iZero) permutation(j+1,k-1,iZero,v0+(long) Math.pow(2, nPlayers-(j+1)));
+
+				if (j != iZero)
+					permutation(j+1,k-1,iZero,v0+(long) Math.pow(2, nPlayers-(j+1)));
+
 				permutation(j+1,k,iZero,v0);
+
 			}
+
 		}
+
 	}
 
 	public static void main(String[] args) throws FileNotFoundException {

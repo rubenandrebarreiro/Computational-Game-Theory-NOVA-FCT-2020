@@ -92,6 +92,7 @@ public class WeightedVotingGame {
 			}
 		}
 		System.out.print("}");
+
 	}
 
 	public void showGame() {
@@ -101,6 +102,8 @@ public class WeightedVotingGame {
 			showSet(i);
 			
 			//System.out.println(" ("+v[i]+")");
+
+
 
 		}
 
