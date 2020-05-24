@@ -15,6 +15,8 @@ public class WeightedGraphGame {
     public int[][] bitSetCoalitions;
     public double[] vCoalitions;
 
+    public double[] shapleyValuesVector;
+
     public WeightedGraphGame(String filename) throws FileNotFoundException {
 
         File valuesFile;
@@ -37,6 +39,7 @@ public class WeightedGraphGame {
 
         this.bitSetCoalitions = new int[(int) Math.pow(2, this.nPlayers)][nPlayers];
         this.vCoalitions = new double[(int) Math.pow(2, this.nPlayers)];
+        this.shapleyValuesVector = new double[nPlayers];
 
         this.adjacencyMatrix = new double[this.nPlayers][this.nPlayers];
 
@@ -402,6 +405,56 @@ public class WeightedGraphGame {
 
     }
 
+    public void computeShapleyValuesVector() {
+
+        for(int i = 0; i < nPlayers; i++) {
+
+            shapleyValuesVector[i] = this.computeShapleyValue(ids[i]);
+
+        }
+
+        System.out.println("*********** Computing Shapley Values ***********");
+        System.out.println("Shapley Values:");
+
+        int i = 0;
+        for(double shapleyValue : shapleyValuesVector) {
+
+            System.out.println("   " + ids[i] + ":" + shapleyValue);
+
+            i++;
+
+        }
+
+    }
+
+    public boolean isShapleyVectorInTheCore() {
+
+        for(int i = 0; i < this.vCoalitions.length; i++) {
+
+            double shapleyValuesSum = 0.0;
+
+            for(int j = 0; j < this.nPlayers; j++) {
+
+                if(this.bitSetCoalitions[i][j] == 1) {
+
+                    shapleyValuesSum += this.shapleyValuesVector[j];
+
+                }
+
+            }
+
+            if( shapleyValuesSum < this.vCoalitions[i] ) {
+
+                return false;
+
+            }
+
+        }
+
+        return true;
+
+    }
+
     public static void main(String[] args) throws FileNotFoundException {
 
         //WeightedGraphGame weightedGraphGame = new WeightedGraphGame("EC7.txt");
@@ -424,23 +477,18 @@ public class WeightedGraphGame {
 
         //weightedGraphGame.showGame();
 
-        double[] shapleyValues = new double[weightedGraphGame.nPlayers];
+        weightedGraphGame.computeShapleyValuesVector();
 
-        for(int i = 0; i < weightedGraphGame.nPlayers; i++) {
+        System.out.println("*********** Verifying if Shapley vector is in the core ***********");
 
-            shapleyValues[i] = weightedGraphGame.computeShapleyValue(weightedGraphGame.ids[i]);
+        if(weightedGraphGame.isShapleyVectorInTheCore()) {
+
+            System.out.println("Shapley vector is in the core!");
 
         }
+        else {
 
-        System.out.println("*********** Computing Shapley Values ***********");
-        System.out.println("Shapley Values:");
-
-        int i = 0;
-        for(double shapleyValue : shapleyValues) {
-
-            System.out.println("   " + weightedGraphGame.ids[i] + ":" + shapleyValue);
-
-            i++;
+            System.out.println("Shapley vector is NOT in the core!");
 
         }
 
