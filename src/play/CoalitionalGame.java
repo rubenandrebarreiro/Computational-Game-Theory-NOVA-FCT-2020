@@ -2,21 +2,18 @@ package play;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class CoalitionalGame {
-	public Double[] v;
+
 	public int nPlayers;
+
 	public String[] ids;
 
-	public CoalitionalGame(Double[] v) {
-		this.v=v; 
-		this.nPlayers = (int)(Math.log(v.length) / Math.log(2));
-		setPlayersID();
-	}
+	public int[][] bitSetCoalitions;
+	public double[] vCoalitions;
+
+	public double[] shapleyValuesVector;
 
 	public CoalitionalGame(String filename) throws FileNotFoundException {
 
@@ -26,201 +23,130 @@ public class CoalitionalGame {
 
 		Scanner valuesFileReader = new Scanner(valuesFile);
 
-		List<Double> valuesDataList = new ArrayList<>();
+		int nLines = 0;
 
 		while(valuesFileReader.hasNextLine()) {
 
-			double valueData = Double.parseDouble(valuesFileReader.nextLine());
-
-			valuesDataList.add(valueData);
+			valuesFileReader.nextLine();
+			nLines++;
 
 		}
 
-		this.v = new Double[valuesDataList.size()];
-
-		this.v = valuesDataList.toArray( v );
-
-		this.nPlayers = (int)(Math.log(v.length) / Math.log(2));
+		this.nPlayers = (int) (Math.log(nLines)/Math.log(2));
 		setPlayersID();
+
+		this.bitSetCoalitions = new int[(int) Math.pow(2, this.nPlayers)][nPlayers];
+		this.vCoalitions = new double[(int) Math.pow(2, this.nPlayers)];
+		this.shapleyValuesVector = new double[nPlayers];
+
+		valuesFileReader = new Scanner(valuesFile);
+
+		int currentLine = 0;
+
+		while(valuesFileReader.hasNextLine()) {
+
+			String lineRead = valuesFileReader.nextLine();
+
+			this.vCoalitions[currentLine] = Double.parseDouble(lineRead);
+
+			currentLine++;
+
+		}
 
 	}
 
-	public int computeFactorial(int num) {
+	public void setPlayersID() {
 
-		if (num == 0) {
+		int c = 64;
+		ids= new String[nPlayers];
 
-			return 1;
+		for (int i=0;i<nPlayers;i++) {
+
+			c++;
+			ids[i] = (String.valueOf((char)c));
 
 		}
-		else {
 
-			int fact = 1;
+	}
 
-			for(int i = 1; i <= nPlayers; i++) {
+	public void buildBitSetCoalitions() {
 
-				fact = fact * i;
+		BitSet bitSet;
+
+		for(int i = 0;i< (1<<nPlayers) ;i++) {
+			bitSet = new BitSet(nPlayers);
+			int count = 0;
+			int temp = i;
+			while (temp > 0) {
+				if ((temp % 2) == 1)
+					bitSet.set(count);
+				temp = temp / 2;
+				count++;
+			}
+
+			StringBuilder bf = new StringBuilder();
+			for (count = nPlayers - 1; count >= 0; count--)
+				bf.append((bitSet.get(count) ? 1 : 0));
+
+			for(int j = 0; j < bf.toString().length(); j++) {
+
+				this.bitSetCoalitions[i][j] = Integer.parseInt(String.valueOf(bf.toString().charAt(j)));
 
 			}
 
-			return fact;
+		}
+
+	}
+
+	public void printBitSetCoalitions() {
+
+		for(int i = 0; i < bitSetCoalitions.length; i++) {
+
+			System.out.print(i + " = " );
+
+			for (int j = 0; j < bitSetCoalitions[0].length; j++) {
+
+				System.out.print(bitSetCoalitions[i][j]);
+
+			}
+
+			System.out.println();
 
 		}
 
 	}
 
-	public double computeShapleyValue(String id) {
+	public void showGame() {
 
-		System.out.println("*********** Computing Shapley Values ***********");
+		System.out.println("*********** Coalitional Game ***********");
 
-		double shapleyValueSum = 0.0;
+		for(int i = 0; i < bitSetCoalitions.length; i++) {
 
-		int NFact = this.computeFactorial(nPlayers);
+			int count = 0;
+			System.out.print("{");
 
-		for(int i = 0; i < v.length; i++) {
+			for (int j = 0; j < bitSetCoalitions[0].length; j++) {
 
-			if(!this.checkIDInSet(id, i)) {
+				if(this.bitSetCoalitions[i][j] == 1) {
 
-				int sizeSetWithoutID = this.computeSetSize(i);
-				int SFact = this.computeFactorial(sizeSetWithoutID);
+					if(count > 0) {
 
-				int NMinusSMinusOne = ( nPlayers - sizeSetWithoutID - 1 );
-				int NMinusSMinusOneFact = this.computeFactorial(NMinusSMinusOne);
-
-				List<String> IDsInSet = this.getIDsInSet(i);
-
-				Double valueWithoutID = v[i];
-
-				Double valueWithID = 0.0;
-
-				int j;
-				for(j = 0; j < v.length; j++) {
-
-					if(this.checkSetWithAdditionalID(IDsInSet, id, j)) {
-
-						valueWithID = v[j];
-
-						break;
+						System.out.print(",");
 
 					}
 
+					System.out.print(ids[j]);
+					count++;
+
 				}
 
-				showSet(i);
-				System.out.print(" ("+valueWithoutID+") -> ");
-				showSet(j);
-				System.out.print(" ("+valueWithID+") ");
-				System.out.print(" ***** gain = ");
-				System.out.print( ( valueWithID - valueWithoutID ) + " " );
-				System.out.println("(" + 0 + ")"); //TODO - que probs são aquelas a seguir ao ganho????
-
-				shapleyValueSum += ( SFact * NMinusSMinusOneFact * ( valueWithID - valueWithoutID ) );
-
 			}
 
-		}
-
-		return shapleyValueSum / (double) NFact;
-
-	}
-
-	public boolean verifyIfShapleyValuesVectorIsInTheCore(Map<String, Double> shapleyValuesVector) {
-
-		for(String id : shapleyValuesVector.keySet()) {
-
-			if(shapleyValuesVector.get(id) < this.getValueOfIDAlone(id)) {
-
-				return false;
-
-			}
+			System.out.println("} (" + this.vCoalitions[i] +")");
 
 		}
 
-		return true;
-
-	}
-
-	public void setPlayersID() {  
-		int c = 64;
-		ids= new String[nPlayers];
-		for (int i=nPlayers-1;i>=0;i--) {
-			c++;
-			ids[i] = (String.valueOf((char)c));
-		}
-	}
-	
-	public void showGame() {
-		System.out.println("*********** Coalitional Game ***********");
-		for (int i=0;i<v.length;i++) {
-			showSet(i); 
-			System.out.println(" ("+v[i]+")");
-		}
-	}
-
-	public boolean checkIDInSet(String id, long v) {
-		int power;
-
-		List<String> setListIDs = new ArrayList<>();
-
-		for(int i=0;i<nPlayers;i++) {
-			power = nPlayers - (i+1);
-
-			if (inSet(i, v)) {
-				setListIDs.add(ids[power]);
-			}
-
-		}
-
-		return setListIDs.contains(id);
-
-	}
-
-	public Double getValueOfIDAlone(String id) {
-
-		for(int i = 0; i < v.length; i++) {
-
-			if(this.getIDsInSet(i).size() == 1 && this.checkIDInSet(id, i)) {
-
-				return v[i];
-
-			}
-
-		}
-
-		return -1.0;
-
-	}
-
-	public List<String> getIDsInSet(long v) {
-		int power;
-
-		List<String> setListIDs = new ArrayList<>();
-
-		for(int i=0;i<nPlayers;i++) {
-			power = nPlayers - (i+1);
-
-			if (inSet(i, v)) {
-				setListIDs.add(ids[power]);
-			}
-
-		}
-
-		return setListIDs;
-
-	}
-
-	public boolean checkSetWithAdditionalID(List<String> ids, String additionalID, long v) {
-
-		for(String id: ids) {
-
-			if(!this.checkIDInSet(id, v)) {
-
-				return false;
-
-			}
-
-		}
-
-		return this.checkIDInSet(additionalID, v);
+		System.out.println();
 
 	}
 
@@ -231,12 +157,12 @@ public class CoalitionalGame {
 		System.out.print("{");
 		int cnt = 0;
 		for(int i=0;i<nPlayers;i++) {
-			power = nPlayers - (i+1);
+
 			if (showPlayerID) {
 				if (inSet(i, v)) {
 					if (cnt>0) System.out.print(",");
 					cnt++;
-					System.out.print(ids[power]);
+					System.out.print(ids[i]);
 				}
 			}
 			else {
@@ -249,58 +175,6 @@ public class CoalitionalGame {
 		System.out.print("}");
 	}
 
-	public int computeSetSize(long v) {
-		int cnt = 0;
-		for(int i=0;i<nPlayers;i++) {
-
-			if (inSet(i, v)) {
-				cnt++;
-			}
-
-		}
-
-		return cnt;
-
-	}
-
-	public void showSetWithOtherID(String id, long v) {
-		boolean showPlayerID = true;
-		//boolean showPlayerID = false;
-		int power;
-		System.out.print("{");
-		int cnt = 0;
-		boolean inserted = false;
-		for(int i=0;i<nPlayers;i++) {
-			power = nPlayers - (i+1);
-			if (showPlayerID) {
-				if (inSet(i, v)) {
-					if (cnt>0) System.out.print(",");
-					cnt++;
-					if(id.compareTo(ids[power]) < 0 && !inserted) {
-						System.out.print(id);
-						inserted = true;
-						if (cnt>0) System.out.print(",");
-						cnt++;
-					}
-					System.out.print(ids[power]);
-				}
-			}
-			else {
-				if (cnt>0) System.out.print(",");
-				cnt++;
-				if (inSet(i, v)) System.out.print(1);
-				else System.out.print(0);
-			}
-		}
-
-		if(cnt == 0) {
-
-			System.out.print(id);
-
-		}
-
-		System.out.print("}");
-	}
 
 	public boolean inSet(int i, long v) {
 		int power;
@@ -313,77 +187,189 @@ public class CoalitionalGame {
 		mod = div % 2;
 		return (mod == 1);
 	}
-	
-	public ArrayList<Integer> getSet(long v) {
-		ArrayList<Integer> players = new ArrayList<>(); 
-		int power;
-		long vi;
-		long div;
-		long mod;
-		for(int i=0;i<nPlayers;i++) {
-			power = nPlayers - (i+1);
-			vi = (long) Math.pow(2, power);
-			div = v / vi;
-			mod = div % 2;
-			if (mod == 1) players.add(power);
+
+	public int getIDIndex(String id) {
+
+		for(int i = 0; i < ids.length; i++) {
+
+			if(id.equalsIgnoreCase(ids[i])) {
+				return i;
+			}
+
 		}
-		return players;
+
+		return -1;
+
 	}
-	
-	public void permutation(int j, int k, int iZero, long v0) {
-		long value = 0;
 
-		if (k==0) {
+	public int getVSize(long v) {
 
-			showSet(v0);
+		int count = 0;
+
+		for(int i = 0; i < nPlayers; i++) {
+
+			if(this.bitSetCoalitions[(int) v][i] == 1) {
+
+				count++;
+
+			}
+
+		}
+
+		return count;
+
+	}
+
+	public double computeShapleyValue(String id) {
+
+     //   System.out.println("***** Shapley Value for " + id + " *****");
+
+		double shapleyValueSum = 0.0;
+
+		int id_index = this.getIDIndex(id);
+
+		long NFact = this.computeFactorial(nPlayers);
+
+		for(int i = 0; i < vCoalitions.length; i++) {
+
+			if(!this.inSet(id_index, i)) {
+
+				double valueWithoutID = vCoalitions[i];
+
+				int j = i + (int) Math.pow(2, nPlayers - id_index - 1);
+				double valueWithID = vCoalitions[j];
+
+//                showSet(i);
+//                System.out.print(" ("+valueWithoutID+") -> ");
+//                showSet(j);
+//                System.out.print(" ("+valueWithID+") ");
+//                System.out.print(" ***** gain = ");
+//                System.out.println( ( valueWithID - valueWithoutID ) );
+
+				long sizeSetWithoutID = this.getVSize(i);
+				long SFact = this.computeFactorial(sizeSetWithoutID);
+
+				long NMinusSMinusOne = ( nPlayers - sizeSetWithoutID - 1 );
+				long NMinusSMinusOneFact = this.computeFactorial(NMinusSMinusOne);
+
+				shapleyValueSum += ( SFact * NMinusSMinusOneFact * ( valueWithID - valueWithoutID ) );
+
+			}
+
+		}
+
+//		System.out.println("Shapley Value for " + id + ": " + shapleyValueSum / (double) NFact);
+
+//		System.out.println();
+
+		return shapleyValueSum / (double) NFact;
+
+	}
+
+	public long computeFactorial(long num) {
+
+		if (num == 0) {
+
+			return 1;
 
 		}
 		else {
-			int op = 0;
 
-			if (iZero < j)
-				op = nPlayers - j;
-			else
-				op = nPlayers - j - 1;
+			long fact = 1;
 
-			if (op==k) {
+			for(int i = 1; i <= num; i++) {
 
-				for(int i=j;i<nPlayers;i++) {
+				fact = fact * i;
 
-					if (i != iZero) value += (long)
-							Math.pow(2, nPlayers-(i+1));
+			}
+
+			return fact;
+
+		}
+
+	}
+
+	public void computeShapleyValuesVector() {
+
+		for(int i = 0; i < nPlayers; i++) {
+
+			shapleyValuesVector[i] = this.computeShapleyValue(ids[i]);
+
+		}
+
+		System.out.println("*********** Computing Shapley Values ***********");
+		System.out.println("Shapley Values:");
+
+		int i = 0;
+		for(double shapleyValue : shapleyValuesVector) {
+
+			System.out.println("   " + ids[i] + ":" + shapleyValue);
+
+			i++;
+
+		}
+
+	}
+
+	public boolean isShapleyVectorInTheCore() {
+
+		for(int i = 0; i < this.vCoalitions.length; i++) {
+
+			double shapleyValuesSum = 0.0;
+
+			for(int j = 0; j < this.nPlayers; j++) {
+
+				if(this.bitSetCoalitions[i][j] == 1) {
+
+					shapleyValuesSum += this.shapleyValuesVector[j];
 
 				}
 
-				v0 = v0 + value;
-				showSet(v0);
-
 			}
-			else {	
 
-				if (j != iZero)
-					permutation(j+1,k-1,iZero,v0+(long) Math.pow(2, nPlayers-(j+1)));
+			if( shapleyValuesSum < this.vCoalitions[i] ) {
 
-				permutation(j+1,k,iZero,v0);
+				return false;
 
 			}
 
 		}
+
+		return true;
 
 	}
 
 	public static void main(String[] args) throws FileNotFoundException {
 
-		Double[] v1 = {0.0, 0.0, 3.0, 8.0, 2.0, 7.0, 5.0, 10.0, 0.0, 0.0, 4.0, 9.0, 3.0, 8.0, 6.0, 11.0};
-		CoalitionalGame c=new CoalitionalGame(v1);
-		c.showGame();
-		for (int j=0;j<c.nPlayers;j++) {
-			System.out.println("*********** Permutations without player "+c.ids[c.nPlayers-1-j]+ " ***********");
-			for (int i=0;i<c.nPlayers;i++) {
-				System.out.print("With "+i+" players: "); 
-				c.permutation(0, i, j, 0);
-				System.out.println();
-			}
+//		CoalitionalGame coalitionalGame = new CoalitionalGame("EC1.txt");
+//		CoalitionalGame coalitionalGame = new CoalitionalGame("EC2.txt");
+		CoalitionalGame coalitionalGame = new CoalitionalGame("EC3.txt");
+
+//        for(String id : coalitionalGame.ids) {
+//            System.out.print(id);
+//        }
+//
+//        System.out.println();
+//
+		coalitionalGame.buildBitSetCoalitions();
+//
+//		coalitionalGame.printBitSetCoalitions();
+
+		//coalitionalGame.showGame();
+
+		coalitionalGame.computeShapleyValuesVector();
+
+		System.out.println("*********** Verifying if Shapley vector is in the core ***********");
+
+		if(coalitionalGame.isShapleyVectorInTheCore()) {
+
+			System.out.println("Shapley vector is in the core!");
+
+		}
+		else {
+
+			System.out.println("Shapley vector is NOT in the core!");
+
 		}
 
 	}
