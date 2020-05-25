@@ -46,7 +46,7 @@ public class WeightedVotingGame {
 
 		valuesFileReader = new Scanner(valuesFile);
 
-		for(int i = 0; i < numLines; i++) {
+		for(int i = 0; i < nPlayers; i++) {
 
 			this.weights[i] = Integer.parseInt(valuesFileReader.nextLine());
 
@@ -162,7 +162,7 @@ public class WeightedVotingGame {
 
 				if (this.bitSetCoalitions[i][j] == 1) {
 
-					sumWeights += weights[i];
+					sumWeights += weights[j];
 
 				}
 
@@ -178,7 +178,7 @@ public class WeightedVotingGame {
 
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
 
 		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC4.txt");
 //		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC5.txt");
