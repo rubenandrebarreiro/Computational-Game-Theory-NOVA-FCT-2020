@@ -1,6 +1,9 @@
 package play;
 
 import lp.LinearProgramming;
+import scpsolver.constraints.LinearBiggerThanEqualsConstraint;
+import scpsolver.lpsolver.LinearProgramSolver;
+import scpsolver.lpsolver.SolverFactory;
 import scpsolver.problems.LinearProgram;
 
 import java.io.File;
@@ -344,29 +347,55 @@ public class CoalitionalGame {
 
 	private void isCoreEmpty() {
 		// Linear Prob verifying if core is empty
-		LinearProgram lp = new LinearProgram();
+        System.out.println("Set core constraints:");
 		double[] c = new double[nPlayers];
 
 		double[] b = new double[this.vCoalitions.length];
 		for (int i = 0; i < b.length; i++) {
-			//TODO: use values from txt
+		    // Copy from vCoalitions, basically
+			b[i] = this.vCoalitions[i];
 		}
 
 		double[][] A = new double[b.length][c.length];
 		for (int i = 0; i < b.length; i++) {
 			for (int j = 0; j < c.length; j++) {
-				//TODO: pick which agents to put and set their values to 1
+				// get values from bitSet
+                A[i][j] = this.bitSetCoalitions[i][j];
 			}
 		}
 
 		double[] lb = new double[c.length];
 
+        LinearProgram lp = new LinearProgram(c);
+        lp.setMinProblem(false);
 
+        for (int i = 0; i < A.length; i++) {
+            lp.addConstraint(new LinearBiggerThanEqualsConstraint(A[i], b[i], "c"+i));
+        }
+        lp.setLowerbound(lb);
+
+        LinearProgramming.showLP(lp);
+
+        LinearProgramSolver solver  = SolverFactory.newDefault();
+        double[] x = solver.solve(lp);
+        if(x != null){
+//            System.out.println(Arrays.toString(x));
+            System.out.println("*********** The core is not empty ***********");
+            showCoreSolution(x);
+        }
 	}
 
-	public static void main(String[] args) throws FileNotFoundException {
+    private void showCoreSolution(double[] x) {
+        System.out.println("Possible core solution:");
+        for (int i = 0; i < x.length; i++) {
+            System.out.println(ids[i] + " = " + x[i]);
+        }
+    }
 
-		CoalitionalGame coalitionalGame = new CoalitionalGame("EC1.txt");
+    public static void main(String[] args) throws FileNotFoundException {
+
+      CoalitionalGame coalitionalGame = new CoalitionalGame("Prob1.txt");
+//		CoalitionalGame coalitionalGame = new CoalitionalGame("EC1.txt");
 //		CoalitionalGame coalitionalGame = new CoalitionalGame("EC2.txt");
 //		CoalitionalGame coalitionalGame = new CoalitionalGame("EC3.txt");
 
