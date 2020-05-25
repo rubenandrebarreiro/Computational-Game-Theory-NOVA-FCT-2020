@@ -1,5 +1,8 @@
 package play;
 
+import lp.LinearProgramming;
+import scpsolver.problems.LinearProgram;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
@@ -329,8 +332,8 @@ public class CoalitionalGame {
 
 			if( shapleyValuesSum < this.vCoalitions[i] ) {
 
+				isCoreEmpty();
 				return false;
-
 			}
 
 		}
@@ -339,11 +342,33 @@ public class CoalitionalGame {
 
 	}
 
+	private void isCoreEmpty() {
+		// Linear Prob verifying if core is empty
+		LinearProgram lp = new LinearProgram();
+		double[] c = new double[nPlayers];
+
+		double[] b = new double[this.vCoalitions.length];
+		for (int i = 0; i < b.length; i++) {
+			//TODO: use values from txt
+		}
+
+		double[][] A = new double[b.length][c.length];
+		for (int i = 0; i < b.length; i++) {
+			for (int j = 0; j < c.length; j++) {
+				//TODO: pick which agents to put and set their values to 1
+			}
+		}
+
+		double[] lb = new double[c.length];
+
+
+	}
+
 	public static void main(String[] args) throws FileNotFoundException {
 
-//		CoalitionalGame coalitionalGame = new CoalitionalGame("EC1.txt");
+		CoalitionalGame coalitionalGame = new CoalitionalGame("EC1.txt");
 //		CoalitionalGame coalitionalGame = new CoalitionalGame("EC2.txt");
-		CoalitionalGame coalitionalGame = new CoalitionalGame("EC3.txt");
+//		CoalitionalGame coalitionalGame = new CoalitionalGame("EC3.txt");
 
 //        for(String id : coalitionalGame.ids) {
 //            System.out.print(id);
@@ -353,9 +378,9 @@ public class CoalitionalGame {
 //
 		coalitionalGame.buildBitSetCoalitions();
 //
-//		coalitionalGame.printBitSetCoalitions();
+		coalitionalGame.printBitSetCoalitions();
 
-		//coalitionalGame.showGame();
+		coalitionalGame.showGame();
 
 		coalitionalGame.computeShapleyValuesVector();
 
