@@ -1,5 +1,12 @@
 package play;
 
+import lp.LinearProgramming;
+import scpsolver.constraints.LinearBiggerThanEqualsConstraint;
+import scpsolver.constraints.LinearEqualsConstraint;
+import scpsolver.lpsolver.LinearProgramSolver;
+import scpsolver.lpsolver.SolverFactory;
+import scpsolver.problems.LinearProgram;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
@@ -42,12 +49,6 @@ public class WeightedGraphGame {
         this.shapleyValuesVector = new double[nPlayers];
 
         this.adjacencyMatrix = new double[this.nPlayers][this.nPlayers];
-
-        for(int i = 0; i < nPlayers; i++) {
-
-            adjacencyMatrix[i][i] = 0;
-
-        }
 
 
         valuesFileReader = new Scanner(valuesFile);
@@ -423,7 +424,7 @@ public class WeightedGraphGame {
 
     }
 
-    public boolean isShapleyVectorInTheCore() {
+    public void isShapleyVectorInTheCore() {
 
         for(int i = 0; i < this.vCoalitions.length; i++) {
 
@@ -440,15 +441,64 @@ public class WeightedGraphGame {
             }
 
             if( shapleyValuesSum < this.vCoalitions[i] ) {
-
-                return false;
+                System.out.println(i + " -> " + shapleyValuesSum + " < " + vCoalitions[i]);
+                System.out.println("Shapley vector is NOT in the core!");
+                isCoreEmpty();
+                return;
 
             }
 
         }
+        System.out.println("Shapley vector is in the core!");
 
-        return true;
+    }
 
+    private void isCoreEmpty() {
+        // Linear Prob verifying if core is empty
+        System.out.println("Set core constraints:");
+        double[] c = new double[nPlayers];
+
+        double[] b = new double[this.vCoalitions.length];
+        for (int i = 0; i < b.length; i++) {
+            // Copy from vCoalitions, basically
+            b[i] = this.vCoalitions[i];
+        }
+
+        double[][] A = new double[b.length][c.length];
+        for (int i = 0; i < b.length; i++) {
+            for (int j = 0; j < c.length; j++) {
+                // get values from bitSet
+                A[i][j] = this.bitSetCoalitions[i][j];
+            }
+        }
+
+        double[] lb = new double[c.length];
+
+        LinearProgram lp = new LinearProgram(c);
+        lp.setMinProblem(false);
+
+        for (int i = 0; i < A.length-1; i++) {
+            lp.addConstraint(new LinearBiggerThanEqualsConstraint(A[i], b[i], "c"+i));
+        }
+        lp.addConstraint(new LinearEqualsConstraint(A[A.length-1], b[A.length-1], "c"+(A.length-1)));
+        lp.setLowerbound(lb);
+
+        LinearProgramming.showLP(lp);
+
+        LinearProgramSolver solver  = SolverFactory.newDefault();
+        double[] x = solver.solve(lp);
+        if(x != null){
+//            System.out.println(Arrays.toString(x));
+            System.out.println("*********** The core is not empty ***********");
+            showCoreSolution(x);
+        }
+    }
+
+    private void showCoreSolution(double[] x) {
+        System.out.println("Possible core solution:");
+        for (int i = 0; i < x.length; i++) {
+            System.out.println(ids[i] + " = " + x[i]);
+        }
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -477,16 +527,11 @@ public class WeightedGraphGame {
 
         System.out.println("*********** Verifying if Shapley vector is in the core ***********");
 
-        if(weightedGraphGame.isShapleyVectorInTheCore()) {
+        weightedGraphGame.isShapleyVectorInTheCore();
 
-            System.out.println("Shapley vector is in the core!");
 
-        }
-        else {
 
-            System.out.println("Shapley vector is NOT in the core!");
 
-        }
 
     }
 

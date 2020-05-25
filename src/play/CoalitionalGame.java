@@ -2,6 +2,7 @@ package play;
 
 import lp.LinearProgramming;
 import scpsolver.constraints.LinearBiggerThanEqualsConstraint;
+import scpsolver.constraints.LinearEqualsConstraint;
 import scpsolver.lpsolver.LinearProgramSolver;
 import scpsolver.lpsolver.SolverFactory;
 import scpsolver.problems.LinearProgram;
@@ -255,6 +256,7 @@ public class CoalitionalGame {
 				long sizeSetWithoutID = this.getVSize(i);
 				long SFact = this.computeFactorial(sizeSetWithoutID);
 
+
 				long NMinusSMinusOne = ( nPlayers - sizeSetWithoutID - 1 );
 				long NMinusSMinusOneFact = this.computeFactorial(NMinusSMinusOne);
 
@@ -317,7 +319,7 @@ public class CoalitionalGame {
 
 	}
 
-	public boolean isShapleyVectorInTheCore() {
+	public void isShapleyVectorInTheCore() {
 
 		for(int i = 0; i < this.vCoalitions.length; i++) {
 
@@ -334,15 +336,14 @@ public class CoalitionalGame {
 			}
 
 			if( shapleyValuesSum < this.vCoalitions[i] ) {
-
+				System.out.println(i + " -> " + shapleyValuesSum + " < " + vCoalitions[i]);
+				System.out.println("Shapley vector is NOT in the core!");
 				isCoreEmpty();
-				return false;
+				return;
 			}
 
 		}
-
-		return true;
-
+		System.out.println("Shapley vector is in the core!");
 	}
 
 	private void isCoreEmpty() {
@@ -369,9 +370,10 @@ public class CoalitionalGame {
         LinearProgram lp = new LinearProgram(c);
         lp.setMinProblem(false);
 
-        for (int i = 0; i < A.length; i++) {
+        for (int i = 0; i < A.length-1; i++) {
             lp.addConstraint(new LinearBiggerThanEqualsConstraint(A[i], b[i], "c"+i));
         }
+		lp.addConstraint(new LinearEqualsConstraint(A[A.length-1], b[A.length-1], "c"+(A.length-1)));
         lp.setLowerbound(lb);
 
         LinearProgramming.showLP(lp);
@@ -394,10 +396,10 @@ public class CoalitionalGame {
 
     public static void main(String[] args) throws FileNotFoundException {
 
-      CoalitionalGame coalitionalGame = new CoalitionalGame("Prob1.txt");
+//      CoalitionalGame coalitionalGame = new CoalitionalGame("Prob1.txt");
 //		CoalitionalGame coalitionalGame = new CoalitionalGame("EC1.txt");
 //		CoalitionalGame coalitionalGame = new CoalitionalGame("EC2.txt");
-//		CoalitionalGame coalitionalGame = new CoalitionalGame("EC3.txt");
+		CoalitionalGame coalitionalGame = new CoalitionalGame("EC3.txt");
 
 //        for(String id : coalitionalGame.ids) {
 //            System.out.print(id);
@@ -407,24 +409,15 @@ public class CoalitionalGame {
 //
 		coalitionalGame.buildBitSetCoalitions();
 //
-		coalitionalGame.printBitSetCoalitions();
+//		coalitionalGame.printBitSetCoalitions();
 
-		coalitionalGame.showGame();
+//		coalitionalGame.showGame();
 
 		coalitionalGame.computeShapleyValuesVector();
 
 		System.out.println("*********** Verifying if Shapley vector is in the core ***********");
 
-		if(coalitionalGame.isShapleyVectorInTheCore()) {
-
-			System.out.println("Shapley vector is in the core!");
-
-		}
-		else {
-
-			System.out.println("Shapley vector is NOT in the core!");
-
-		}
+		coalitionalGame.isShapleyVectorInTheCore();
 
 	}
 
