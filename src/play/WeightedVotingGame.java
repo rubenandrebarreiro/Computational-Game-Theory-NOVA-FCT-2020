@@ -64,6 +64,16 @@ public class WeightedVotingGame {
 
 	}
 
+	public static double round(double value, int places) {
+		if (places < 0)
+			throw new IllegalArgumentException();
+
+		long factor = (long) Math.pow(10, places);
+		value = value * factor;
+		long tmp = Math.round(value);
+		return (double) tmp / factor;
+	}
+
 	public void setPlayersID() {
 
 		int c = 64;
@@ -243,7 +253,7 @@ public class WeightedVotingGame {
 
 		for(int i = 0; i < nPlayers; i++) {
 
-			shapleyValuesVector[i] = this.computeShapleyValue(ids[i]);
+			shapleyValuesVector[i] = round(this.computeShapleyValue(ids[i]),2);
 
 		}
 
@@ -302,9 +312,9 @@ public class WeightedVotingGame {
 
 		double[][] A = new double[b.length][c.length];
 		for (int i = 0; i < b.length; i++) {
-			for (int j = 0; j < c.length; j++) {
+			for (int j = c.length-1; j >= 0; j--) {
 				// get values from bitSet
-				A[i][j] = this.bitSetCoalitions[i][j];
+				A[i][c.length - (j + 1)] = this.bitSetCoalitions[i][j];
 			}
 		}
 
@@ -319,7 +329,7 @@ public class WeightedVotingGame {
 		lp.addConstraint(new LinearEqualsConstraint(A[A.length-1], b[A.length-1], "c"+(A.length-1)));
 		lp.setLowerbound(lb);
 
-		LinearProgramming.showLP(lp);
+//		LinearProgramming.showLP(lp);
 
 		LinearProgramSolver solver  = SolverFactory.newDefault();
 		double[] x = solver.solve(lp);
@@ -335,7 +345,7 @@ public class WeightedVotingGame {
 	private void showCoreSolution(double[] x) {
 		System.out.println("Possible core solution:");
 		for (int i = 0; i < x.length; i++) {
-			System.out.println(ids[i] + " = " + x[i]);
+			System.out.println(ids[x.length - i - 1 ] + " = " + x[i]);
 		}
 	}
 
@@ -400,10 +410,11 @@ public class WeightedVotingGame {
 	}
 
 	public static void main(String[] args) throws FileNotFoundException {
-		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("Prob2a.txt");
+//		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("Prob2a.txt");
+//		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("Prob2b.txt");
 //		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC4.txt");
 //		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC5.txt");
-//		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC6.txt");
+		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC6.txt");
 
 		//        for(String id : coalitionalGame.ids) {
 //            System.out.print(id);
@@ -413,11 +424,11 @@ public class WeightedVotingGame {
 //
 		weightedVotingGame.buildBitSetCoalitions();
 //
-		weightedVotingGame.printBitSetCoalitions();
+//		weightedVotingGame.printBitSetCoalitions();
 
 		weightedVotingGame.buildVCoalitions();
 
-		weightedVotingGame.showGame();
+//		weightedVotingGame.showGame();
 
 		weightedVotingGame.computeShapleyValuesVector();
 

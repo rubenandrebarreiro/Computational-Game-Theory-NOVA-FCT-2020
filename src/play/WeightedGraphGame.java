@@ -78,6 +78,16 @@ public class WeightedGraphGame {
 
     }
 
+    public static double round(double value, int places) {
+        if (places < 0)
+            throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+    }
+
     public void setPlayersID() {
 
         int c = 64;
@@ -406,7 +416,7 @@ public class WeightedGraphGame {
 
         for(int i = 0; i < nPlayers; i++) {
 
-            shapleyValuesVector[i] = this.computeShapleyValue(ids[i]);
+            shapleyValuesVector[i] = round(this.computeShapleyValue(ids[i]), 2);
 
         }
 
@@ -466,9 +476,9 @@ public class WeightedGraphGame {
 
         double[][] A = new double[b.length][c.length];
         for (int i = 0; i < b.length; i++) {
-            for (int j = 0; j < c.length; j++) {
+            for (int j = c.length-1; j >= 0; j--) {
                 // get values from bitSet
-                A[i][j] = this.bitSetCoalitions[i][j];
+                A[i][c.length - (j + 1)] = this.bitSetCoalitions[i][j];
             }
         }
 
@@ -497,14 +507,15 @@ public class WeightedGraphGame {
     private void showCoreSolution(double[] x) {
         System.out.println("Possible core solution:");
         for (int i = 0; i < x.length; i++) {
-            System.out.println(ids[i] + " = " + x[i]);
+            System.out.println(ids[x.length - i - 1 ] + " = " + x[i]);
         }
     }
 
     public static void main(String[] args) throws FileNotFoundException {
 
-        //WeightedGraphGame weightedGraphGame = new WeightedGraphGame("EC7.txt");
-        //WeightedGraphGame weightedGraphGame = new WeightedGraphGame("EC8.txt");
+//        WeightedGraphGame weightedGraphGame = new WeightedGraphGame("Prob3.txt");
+//        WeightedGraphGame weightedGraphGame = new WeightedGraphGame("EC7.txt");
+//        WeightedGraphGame weightedGraphGame = new WeightedGraphGame("EC8.txt");
         WeightedGraphGame weightedGraphGame = new WeightedGraphGame("EC9.txt");
 
 //        weightedGraphGame.printAdjacencyMatrix();
@@ -521,7 +532,7 @@ public class WeightedGraphGame {
 
         weightedGraphGame.buildVCoalitions();
 
-        //weightedGraphGame.showGame();
+//        weightedGraphGame.showGame();
 
         weightedGraphGame.computeShapleyValuesVector();
 

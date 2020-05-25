@@ -1,0 +1,30 @@
+*********** Computing Shapley Values ***********
+Shapley Values:
+   A:6.6
+   B:2.66
+   C:3.2
+   D:4.22
+   E:12.74
+   F:12.74
+   G:0.0
+   H:6.6
+   I:13.25
+   J:2.66
+   K:4.22
+   L:8.89
+   M:1.0
+   N:2.15
+   O:8.3
+   P:10.76
+   Q:0.0
+   R:0.0
+92 -> 30.1 < 100.0
+Shapley vector is NOT in the core!
+Set core constraints:
+GLPK Simplex Optimizer, v4.65
+262144 rows, 18 columns, 2359296 non-zeros
+      0: obj = -0.000000000e+000 inf =  2.410e+007 (240952)
+      5: obj = -0.000000000e+000 inf =  1.123e+007 (112336)
+LP HAS NO PRIMAL FEASIBLE SOLUTION
+*********** The core is empty ***********simplex() failed
+
