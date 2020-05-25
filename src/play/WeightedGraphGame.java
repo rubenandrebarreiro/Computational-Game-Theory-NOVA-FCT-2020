@@ -334,10 +334,6 @@ public class WeightedGraphGame {
 
     }
 
-    public static long getUnsignedInt(int x) {
-        return x & 0x00000000ffffffffL;
-    }
-
     public double computeShapleyValue(String id) {
 
 //        System.out.println("***** Shapley Value for " + id + " *****");
