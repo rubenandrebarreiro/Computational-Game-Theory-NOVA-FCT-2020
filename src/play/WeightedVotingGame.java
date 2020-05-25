@@ -9,12 +9,15 @@ public class WeightedVotingGame {
 	public int nPlayers;
 	public String[] ids;
 
-	public Map<String, Double> weightsByPlayer;
+	public int[] weights;
+
+	public int[][] bitSetCoalitions;
+	public double[] vCoalitions;
+
+	public double[] shapleyValuesVector;
+
 	public int thresholdLimit;
 	public double spendingAmount;
-
-	public Map<String, Double> winningCoalitions;
-
 
 	public WeightedVotingGame(String filename) throws FileNotFoundException {
 
@@ -34,21 +37,18 @@ public class WeightedVotingGame {
 		}
 
 		nPlayers = ( numLines - 2 );
+		setPlayersID();
 
-		this.ids = new String[nPlayers];
-
-		weightsByPlayer = new HashMap<>();
+		this.weights = new int[nPlayers];
+		this.bitSetCoalitions = new int[(int) Math.pow(2, this.nPlayers)][nPlayers];
+		this.vCoalitions = new double[(int) Math.pow(2, this.nPlayers)];
+		this.shapleyValuesVector = new double[nPlayers];
 
 		valuesFileReader = new Scanner(valuesFile);
 
 		for(int i = 0; i < numLines; i++) {
 
-			String id = (String.valueOf((char) ( 65 + weightsByPlayer.size() )));
-
-			this.ids[i] = id;
-
-			weightsByPlayer.put( id,
-								 Double.parseDouble(valuesFileReader.nextLine()));
+			this.weights[i] = Integer.parseInt(valuesFileReader.nextLine());
 
 		}
 
@@ -57,55 +57,146 @@ public class WeightedVotingGame {
 
 	}
 
-	public boolean inSet(int i, long v) {
-		int power;
-		long vi;
-		long div;
-		long mod;
-		power = nPlayers - (i+1);
-		vi = (long) Math.pow(2, power);
-		div = v / vi;
-		mod = div % 2;
-		return (mod == 1);
+	public void setPlayersID() {
+
+		int c = 64;
+		ids= new String[nPlayers];
+
+		for (int i=0;i<nPlayers;i++) {
+
+			c++;
+			ids[i] = (String.valueOf((char)c));
+
+		}
+
 	}
 
-	public void showSet(long v) {
-		boolean showPlayerID = true;
-		//boolean showPlayerID = false;
-		int power;
-		System.out.print("{");
-		int cnt = 0;
-		for(int i=0;i<nPlayers;i++) {
-			power = nPlayers - (i+1);
-			if (showPlayerID) {
-				if (inSet(i, v)) {
-					if (cnt>0) System.out.print(",");
-					cnt++;
-					System.out.print(ids[power]);
-				}
+	public void buildBitSetCoalitions() {
+
+		BitSet bitSet;
+
+		for(int i = 0;i< (1<<nPlayers) ;i++) {
+			bitSet = new BitSet(nPlayers);
+			int count = 0;
+			int temp = i;
+			while (temp > 0) {
+				if ((temp % 2) == 1)
+					bitSet.set(count);
+				temp = temp / 2;
+				count++;
 			}
-			else {
-				if (cnt>0) System.out.print(",");
-				cnt++;
-				if (inSet(i, v)) System.out.print(1);
-				else System.out.print(0);
+
+			StringBuilder bf = new StringBuilder();
+			for (count = nPlayers - 1; count >= 0; count--)
+				bf.append((bitSet.get(count) ? 1 : 0));
+
+			for(int j = 0; j < bf.toString().length(); j++) {
+
+				this.bitSetCoalitions[i][j] = Integer.parseInt(String.valueOf(bf.toString().charAt(j)));
+
 			}
+
 		}
-		System.out.print("}");
+
+	}
+
+	public void printBitSetCoalitions() {
+
+		for(int i = 0; i < bitSetCoalitions.length; i++) {
+
+			System.out.print(i + " = " );
+
+			for (int j = 0; j < bitSetCoalitions[0].length; j++) {
+
+				System.out.print(bitSetCoalitions[i][j]);
+
+			}
+
+			System.out.println();
+
+		}
 
 	}
 
 	public void showGame() {
+
 		System.out.println("*********** Coalitional Game ***********");
-		for (int i=0;i<Math.pow(2, this.nPlayers);i++) {
 
-			showSet(i);
-			
-			//System.out.println(" ("+v[i]+")");
+		for(int i = 0; i < bitSetCoalitions.length; i++) {
 
+			int count = 0;
+			System.out.print("{");
 
+			for (int j = 0; j < bitSetCoalitions[0].length; j++) {
+
+				if(this.bitSetCoalitions[i][j] == 1) {
+
+					if(count > 0) {
+
+						System.out.print(",");
+
+					}
+
+					System.out.print(ids[j]);
+					count++;
+
+				}
+
+			}
+
+			System.out.println("} (" + this.vCoalitions[i] +")");
 
 		}
+
+		System.out.println();
+
+	}
+
+	public void buildVCoalitions() {
+
+		for(int i = 0; i < bitSetCoalitions.length; i++) {
+
+			int sumWeights = 0;
+
+			for (int j = 0; j < bitSetCoalitions[0].length; j++) {
+
+				if (this.bitSetCoalitions[i][j] == 1) {
+
+					sumWeights += weights[i];
+
+				}
+
+			}
+
+			if(sumWeights >= this.thresholdLimit) {
+
+				vCoalitions[i] = this.spendingAmount;
+
+			}
+
+		}
+
+	}
+
+	public static void main(String[] args) {
+
+		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC4.txt");
+//		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC5.txt");
+//		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC6.txt");
+
+		//        for(String id : coalitionalGame.ids) {
+//            System.out.print(id);
+//        }
+//
+//        System.out.println();
+//
+		weightedVotingGame.buildBitSetCoalitions();
+//
+		weightedVotingGame.printBitSetCoalitions();
+
+		weightedVotingGame.buildVCoalitions();
+
+		weightedVotingGame.showGame();
 
 	}
 
