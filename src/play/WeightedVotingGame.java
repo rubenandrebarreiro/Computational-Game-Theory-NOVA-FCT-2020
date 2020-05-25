@@ -287,7 +287,7 @@ public class WeightedVotingGame {
 
 			}
 
-			if( shapleyValuesSum < this.vCoalitions[i] ) {
+			if( shapleyValuesSum < spendingAmount ) {
 				System.out.println(i + " -> " + shapleyValuesSum + " < " + spendingAmount);
 				System.out.println("Shapley vector is NOT in the core!");
 				isCoreEmpty();
