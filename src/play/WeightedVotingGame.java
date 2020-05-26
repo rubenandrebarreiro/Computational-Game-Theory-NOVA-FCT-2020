@@ -287,8 +287,8 @@ public class WeightedVotingGame {
 
 			}
 
-			if( shapleyValuesSum < spendingAmount ) {
-				System.out.println(i + " -> " + shapleyValuesSum + " < " + spendingAmount);
+			if( shapleyValuesSum < this.vCoalitions[i] ) {
+				System.out.println(i + " -> " + shapleyValuesSum + " < " + this.vCoalitions[i]);
 				System.out.println("Shapley vector is NOT in the core!");
 				isCoreEmpty();
 				return;
@@ -410,11 +410,11 @@ public class WeightedVotingGame {
 	}
 
 	public static void main(String[] args) throws FileNotFoundException {
-//		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("Prob2a.txt");
+		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("Prob2a.txt");
 //		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("Prob2b.txt");
 //		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC4.txt");
 //		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC5.txt");
-		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC6.txt");
+//		WeightedVotingGame weightedVotingGame = new WeightedVotingGame("EC6.txt");
 
 		//        for(String id : coalitionalGame.ids) {
 //            System.out.print(id);
