@@ -1,11 +1,13 @@
 package play.mysteriousgame.utils;
 
 import lp.LinearProgramming;
+import lp.NashEquilibrium;
 import scpsolver.constraints.LinearEqualsConstraint;
 import scpsolver.constraints.LinearSmallerThanEqualsConstraint;
 import scpsolver.problems.LinearProgram;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class NormalFormGame {
@@ -166,7 +168,8 @@ public class NormalFormGame {
                     System.out.print(this.actionLabelsForPlayerNum2.get(currentActionForPlayerNum2).substring(0, 1));
                     System.out.print("    ");
 
-                } else {
+                }
+                else {
 
                     System.out.print("\t");
                     System.out.print("Column " + currentActionForPlayerNum2);
@@ -189,7 +192,8 @@ public class NormalFormGame {
 
                     System.out.print(actionLabelsForPlayerNum1.get(currentActionForPlayerNum1).substring(0, 1) + ": ");
 
-                } else {
+                }
+                else {
 
                     System.out.print("Row " + currentActionForPlayerNum1 + ": ");
 
@@ -247,8 +251,8 @@ public class NormalFormGame {
 
                     if (this.columnsCurrentlyConsideredForPlayer2[currentColumn]) {
 
-                        if ((matrixUtilitiesForPlayer1[currentRow][currentColumn] +
-                                matrixUtilitiesForPlayer2[currentRow][currentColumn]) != 0) {
+                        if ( ( matrixUtilitiesForPlayer1[currentRow][currentColumn] +
+                               matrixUtilitiesForPlayer2[currentRow][currentColumn] ) != 0 ) {
 
                             return false;
 
@@ -307,7 +311,7 @@ public class NormalFormGame {
                 playerNum1ZeroSumNashEquilibrium(numRows, numColumns, activeRows, activeColumns);
 
         zeroSumNashEquilibriumStrategy2 =
-                playerNum2ZeroSumNashEquilibrium(numColumns, numRows, activeRows, activeColumns);
+                playerNum2ZeroSumNashEquilibrium(numRows, numColumns, activeRows, activeColumns);
 
 
         return new double[][] { zeroSumNashEquilibriumStrategy1, zeroSumNashEquilibriumStrategy2 };
@@ -349,7 +353,10 @@ public class NormalFormGame {
 
             for (int currentRow = 0; currentRow < numRows; currentRow++) {
 
-                constraintsMatrix[currentColumn][currentRow] = this.matrixUtilitiesForPlayer2[activeRows.get(currentRow)][activeColumns.get(currentColumn)];
+                constraintsMatrix[currentColumn][currentRow] =
+                        this.matrixUtilitiesForPlayer2[activeRows.get(currentRow)]
+                                                      [activeColumns.get(currentColumn)];
+
                 constraintsMatrix[numColumns][currentRow] = 1.0;
 
                 if (constraintsMatrix[currentColumn][currentRow] < minimumUtility) {
@@ -394,7 +401,16 @@ public class NormalFormGame {
 
         }
 
-        linearProgram.addConstraint(new LinearEqualsConstraint(constraintsMatrix[numColumns], independentTermsConstraints[numColumns], "c" + numColumns));
+        linearProgram.addConstraint
+                (
+                        new LinearEqualsConstraint
+                                (
+                                        constraintsMatrix[numColumns],
+                                        independentTermsConstraints[numColumns],
+                                        "c" + numColumns
+                                )
+                );
+
         linearProgram.setLowerbound(lowerBounds);
 
         LinearProgramming.showLP(linearProgram);
@@ -407,60 +423,457 @@ public class NormalFormGame {
 
     }
 
-    double[] playerNum2ZeroSumNashEquilibrium(int nCols, int nRows, ArrayList<Integer> iRow, ArrayList<Integer> jCol) {
+    double[] playerNum2ZeroSumNashEquilibrium(int numRows, int numColumns,
+                                              ArrayList<Integer> activeRows, ArrayList<Integer> activeColumns) {
 
         // set P terms to one
-        double[] c = new double[nCols + 1];
-        for (int i = 0; i < nCols; i++) {
-            c[i] = 0.0;
+        double[] termsProbabilities = new double[ ( numColumns + 1 ) ];
+
+        for (int currentColumn = 0; currentColumn < numColumns; currentColumn++) {
+
+            termsProbabilities[currentColumn] = 0.0;
+
         }
-        c[nCols] = 1.0;
+
+        termsProbabilities[numColumns] = 1.0;
 
         // set constraints independent term to
         // utilities of row to dominate
-        double[] b = new double[nRows + 1];
-        for (int j = 0; j < nRows; j++) {
-            b[j] = 0.0;
+        double[] independentTermsConstraints = new double[ ( numRows + 1 ) ];
+
+        for (int currentRow = 0; currentRow < numRows; currentRow++) {
+
+            independentTermsConstraints[currentRow] = 0.0;
+
         }
-        b[nRows] = 1;
+
+        independentTermsConstraints[numRows] = 1;
 
         // constraints matrix
-        double[][] A = new double[nRows + 1][nCols + 1];
-        double minUtil = 0;
+        double[][] constraintsMatrix = new double[ ( numRows + 1 ) ][ ( numColumns + 1 ) ];
+        double minimumUtility = 0;
 
-        // add utilites to X's
-        for (int i = 0; i < nRows; i++) {
-            for (int j = 0; j < nCols; j++) {
-                A[i][j] = matrixUtilitiesForPlayer1[iRow.get(i)][jCol.get(j)];
-                A[nRows][j] = 1.0;
-                if (A[i][j] < minUtil) {
-                    minUtil = A[i][j];
+        // add utilities to X's
+        for (int currentRow = 0; currentRow < numRows; currentRow++) {
+
+            for (int currentColumn = 0; currentColumn < numColumns; currentColumn++) {
+
+                constraintsMatrix[currentRow][currentColumn] =
+                        this.matrixUtilitiesForPlayer1[activeRows.get(currentRow)]
+                                                      [activeColumns.get(currentColumn)];
+
+                constraintsMatrix[numRows][currentColumn] = 1.0;
+
+                if (constraintsMatrix[currentRow][currentColumn] < minimumUtility) {
+
+                    minimumUtility = constraintsMatrix[currentRow][currentColumn];
+
                 }
+
             }
-            A[i][nCols] = -1.0;
+
+            constraintsMatrix[currentRow][numColumns] = -1.0;
+
         }
 
 
         // Set lower bounds
-        double[] lb = new double[nCols + 1];
-        for (int j = 0; j <= nCols; j++) {
-            lb[j] = 0;
+        double[] lowerBounds = new double[ ( numColumns + 1 ) ];
+
+        for (int currentColumn = 0; currentColumn <= numColumns; currentColumn++) {
+
+            lowerBounds[currentColumn] = 0;
+
         }
-        lb[nCols] = minUtil;
+
+        lowerBounds[numColumns] = minimumUtility;
 
 
-        LinearProgram lp = new LinearProgram(c);
-        lp.setMinProblem(true);
-        for (int i = 0; i < nRows; i++) {
-            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
+        LinearProgram linearProgram = new LinearProgram(termsProbabilities);
+        linearProgram.setMinProblem(true);
+
+        for (int currentRow = 0; currentRow < numRows; currentRow++) {
+
+            linearProgram.addConstraint
+                    (
+                            new LinearSmallerThanEqualsConstraint
+                                    (
+                                            constraintsMatrix[currentRow],
+                                            independentTermsConstraints[currentRow],
+                                            "c" + currentRow
+                                    )
+                    );
+
         }
-        lp.addConstraint(new LinearEqualsConstraint(A[nRows], b[nRows], "c" + nRows));
-        lp.setLowerbound(lb);
-        LinearProgramming.showLP(lp);
-        double[] x = new double[c.length];
-        x = LinearProgramming.solveLP(lp);
-        LinearProgramming.showSolution(x, lp);
-        return x;
+
+        linearProgram.addConstraint
+                (
+                        new LinearEqualsConstraint
+                                (
+                                        constraintsMatrix[numRows],
+                                        independentTermsConstraints[numRows],
+                                        "c" + numRows
+                                )
+                );
+
+        linearProgram.setLowerbound(lowerBounds);
+
+        LinearProgramming.showLP(linearProgram);
+        double[] linearProgramSolution = LinearProgramming.solveLP(linearProgram);
+
+        LinearProgramming.showSolution(linearProgramSolution, linearProgram);
+
+        return linearProgramSolution;
+
+    }
+
+    public double[][] doGeneralSumNashEquilibrium() {
+
+        int maximumSubsetSize = Math.min(this.numberOfActionsForPlayerNum1, this.numberOfActionsForPlayerNum2);
+
+        for (int subsetSize = 1; subsetSize <= maximumSubsetSize; subsetSize++) {
+
+            System.out.println("Size: " + subsetSize + "x" + subsetSize);
+
+            List<boolean[]> rowSubsets = NashEquilibrium.getSubSets(0, subsetSize,
+                                                                    this.numberOfActionsForPlayerNum1,
+                                                                    this.rowsCurrentlyConsideredForPlayer1);
+
+            List<boolean[]> columnSubsets = NashEquilibrium.getSubSets(0, subsetSize,
+                                                                       this.numberOfActionsForPlayerNum2,
+                                                                       this.columnsCurrentlyConsideredForPlayer2);
+
+            NashEquilibrium.showSubSets(rowSubsets);
+            System.out.print("x ");
+
+            NashEquilibrium.showSubSets(columnSubsets);
+            System.out.print("\n");
+
+            // Do all this for every combination of subsets until you find the first
+            for (boolean[] rowSubset : rowSubsets) {
+
+                for (boolean[] columnSubset : columnSubsets) {
+
+                    double[] generalSumNashEquilibriumResult = doGeneralSum(rowSubset, columnSubset, subsetSize);
+
+                    if ( generalSumNashEquilibriumResult != null ) {
+
+                        double[] probabilitiesForPlayerNum1 =
+                                new double[ this.numberOfActionsForPlayerNum1 ];
+
+                        double[] probabilitiesForPlayerNum2 =
+                                new double[ this.numberOfActionsForPlayerNum2 ];
+
+
+                        int count = 0;
+
+                        for (int currentRow = 0; currentRow < this.numberOfActionsForPlayerNum1; currentRow++) {
+
+                            if (rowSubset[currentRow]) {
+
+                                if (generalSumNashEquilibriumResult[count] == 0.0) {
+
+                                    return null;
+
+                                }
+
+                                probabilitiesForPlayerNum1[currentRow] =
+                                        generalSumNashEquilibriumResult[count];
+
+                                count++;
+
+                            }
+                            else {
+
+                                probabilitiesForPlayerNum1[currentRow] = 0.0;
+
+                            }
+
+                        }
+
+                        for (int currentColumn = 0; currentColumn < this.numberOfActionsForPlayerNum2; currentColumn++) {
+
+                            if (columnSubset[currentColumn]) {
+
+                                probabilitiesForPlayerNum2[currentColumn] = generalSumNashEquilibriumResult[count];
+
+                                count++;
+
+                            }
+                            else {
+
+                                probabilitiesForPlayerNum2[currentColumn] = 0.0;
+
+                            }
+
+                        }
+
+                        return new double[][] { probabilitiesForPlayerNum1, probabilitiesForPlayerNum2 };
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return null;
+
+    }
+
+    public double[] doGeneralSum(boolean[] rowSubset, boolean[] columnSubset, int subsetSize) {
+
+        System.out.print("TESTING SUBSET ");
+        NashEquilibrium.showSubset(rowSubset);
+
+        System.out.print(" x ");
+        NashEquilibrium.showSubset(columnSubset);
+
+        System.out.println();
+
+
+        ArrayList<Integer> activeRows = new ArrayList<>();
+
+        for (int currentRow = 0; currentRow < this.numberOfActionsForPlayerNum1; currentRow++) {
+
+            if (this.rowsCurrentlyConsideredForPlayer1[currentRow]) {
+
+                activeRows.add(currentRow);
+
+            }
+
+        }
+
+        ArrayList<Integer> activeColumns = new ArrayList<>();
+
+        for (int currentColumn = 0; currentColumn < this.numberOfActionsForPlayerNum2; currentColumn++) {
+
+            if (this.columnsCurrentlyConsideredForPlayer2[currentColumn]) {
+
+                activeColumns.add(currentColumn);
+
+            }
+
+        }
+
+        int numNotDominatedRows = activeRows.size();
+        int numNotDominatedColumns = activeColumns.size();
+
+        double minimumUtility = 0;
+
+        int numVariables = ( ( subsetSize * 2 ) + 2 );
+        int numConstraints = ( numNotDominatedColumns + numNotDominatedRows + 2 );
+
+        //region Define Cs
+        double[] termsProbabilities = new double[numVariables]; // All zeros. We're using a function
+        //endregion
+
+        //region Define Bs
+        double[] independentTermsConstraints = new double[numConstraints];
+
+        // Make sure all probabilities add to one (last two rows of constraints)
+        independentTermsConstraints[ ( numConstraints - 2 ) ] = 1.0;
+        independentTermsConstraints[ ( numConstraints - 1 ) ] = 1.0;
+        //endregion
+
+        //region Define constraints
+        double[][] constraintsMatrix = new double[numConstraints][numVariables];
+
+        //region P1 utilities paired with P2's probabilities
+        for (int currentNotDominatedRow = 0;
+             currentNotDominatedRow < numNotDominatedRows;
+             currentNotDominatedRow++) {
+
+            int auxiliaryIndex = subsetSize; // Gets incremented as we find subset elements
+
+            for (Integer activeColumn : activeColumns) {
+
+                if (columnSubset[activeColumn]) {
+
+                    double utilitiesForPlayerNum1 =
+                            this.matrixUtilitiesForPlayer1[activeRows.get(currentNotDominatedRow)][activeColumn]; // Get utility from NormalGame
+
+                    constraintsMatrix[currentNotDominatedRow][auxiliaryIndex] = utilitiesForPlayerNum1; // Add utility multiplied by the P2's action probability
+
+                    auxiliaryIndex++; // Found subset element, get next index ready
+
+                    if (utilitiesForPlayerNum1 < minimumUtility) {
+
+                        minimumUtility = utilitiesForPlayerNum1;
+
+                    }
+
+                }
+
+            }
+
+            constraintsMatrix[currentNotDominatedRow][ ( numVariables - 2 ) ] = -1.0;
+
+        }
+
+        //region P2 utilities paired with P1's probabilities
+        for (int currentNotDominatedColumn = 0;
+             currentNotDominatedColumn < numNotDominatedColumns;
+             currentNotDominatedColumn++) {
+
+            // Same thing as with P1 but with the offsets so indexes line up
+            int auxiliaryIndex = 0;
+
+            for (Integer activeRow : activeRows) {
+
+                if (rowSubset[activeRow]) {
+
+                    double utilitiesForPlayerNum2 =
+                            this.matrixUtilitiesForPlayer2[activeRow][activeColumns.get(currentNotDominatedColumn)];
+
+                    constraintsMatrix[ ( currentNotDominatedColumn + numNotDominatedRows ) ][auxiliaryIndex] =
+                                                                                            utilitiesForPlayerNum2;
+
+                    auxiliaryIndex++;
+
+                    if (utilitiesForPlayerNum2 < minimumUtility) {
+
+                        minimumUtility = utilitiesForPlayerNum2;
+
+                    }
+
+                }
+
+            }
+
+            constraintsMatrix[currentNotDominatedColumn + numNotDominatedRows][numVariables - 1] = -1.0;
+
+        }
+        //endregion
+
+        for (int currentAuxiliaryColumn = 0; currentAuxiliaryColumn < subsetSize; currentAuxiliaryColumn++) {
+
+            constraintsMatrix[ ( numConstraints - 2 ) ][currentAuxiliaryColumn] = 1.0;
+            constraintsMatrix[ ( numConstraints - 1 ) ][ ( subsetSize + currentAuxiliaryColumn ) ] = 1.0;
+
+        }
+        //endregion
+
+        //region Define Lower Bounds
+        double[] lowerBounds = new double[numVariables];
+
+        // Utilities need to be bounded by minUtil if it is less than 0 (it already is initialized to 0)
+        lowerBounds[ ( numVariables - 2 ) ] = minimumUtility;
+        lowerBounds[ ( numVariables - 1 ) ] = minimumUtility;
+        //endregion
+
+        //region Define LP
+        LinearProgram linearProgram = new LinearProgram(termsProbabilities);
+        linearProgram.setMinProblem(true);
+
+        for (int currentConstraint = 0; currentConstraint < numConstraints; currentConstraint++) {
+
+            if (currentConstraint < numNotDominatedRows) {
+
+                if (rowSubset[activeRows.get(currentConstraint)]) {
+
+                    linearProgram.addConstraint
+                            (
+                                    new LinearEqualsConstraint
+                                            (
+                                                    constraintsMatrix[currentConstraint],
+                                                    independentTermsConstraints[currentConstraint],
+                                                    "c" + currentConstraint
+                                            )
+                            );
+
+                }
+                else {
+
+                    linearProgram.addConstraint
+                            (
+                                    new LinearSmallerThanEqualsConstraint
+                                            (
+                                                    constraintsMatrix[currentConstraint],
+                                                    independentTermsConstraints[currentConstraint],
+                                                    "c" + currentConstraint
+                                            )
+                            );
+
+                }
+
+            }
+            else if (currentConstraint < ( numNotDominatedRows + numNotDominatedColumns ) ) {
+
+                if (columnSubset[ activeColumns.get( ( currentConstraint - numNotDominatedRows ) ) ]) {
+
+                    linearProgram.addConstraint
+                            (
+                                    new LinearEqualsConstraint
+                                            (
+                                                    constraintsMatrix[currentConstraint],
+                                                    independentTermsConstraints[currentConstraint],
+                                                    "c" + currentConstraint
+                                            )
+                            );
+
+                }
+                else {
+
+                    linearProgram.addConstraint
+                            (
+                                    new LinearSmallerThanEqualsConstraint
+                                            (
+                                                    constraintsMatrix[currentConstraint],
+                                                    independentTermsConstraints[currentConstraint],
+                                                    "c" + currentConstraint
+                                            )
+                            );
+
+                }
+
+            }
+            else {
+
+                linearProgram.addConstraint
+                        (
+                                new LinearEqualsConstraint
+                                        (
+                                                constraintsMatrix[currentConstraint],
+                                                independentTermsConstraints[currentConstraint],
+                                                "c" + currentConstraint
+                                        )
+                        );
+
+            }
+
+        }
+
+        linearProgram.setLowerbound(lowerBounds);
+        LinearProgramming.showLP(linearProgram);
+
+        double[] linearProgramSolutions = LinearProgramming.solveLP(linearProgram);
+
+        LinearProgramming.showSolution(linearProgramSolutions, linearProgram);
+        //endregion
+
+        if (linearProgramSolutions != null) {
+
+            for (int currentLinearProgramSolution = 0;
+                 currentLinearProgramSolution < ( linearProgramSolutions.length - 2 );
+                 currentLinearProgramSolution++) {
+
+                if (linearProgramSolutions[currentLinearProgramSolution] == 0.0) {
+
+                    return null;
+
+                }
+
+            }
+
+        }
+
+
+        System.out.println(Arrays.toString(linearProgramSolutions));
+
+        return linearProgramSolutions;
+
     }
 
 }

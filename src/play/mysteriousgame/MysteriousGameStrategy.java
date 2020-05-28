@@ -217,7 +217,16 @@ public class MysteriousGameStrategy extends Strategy {
 
                 normalFormGame.showMatrixFormGame();
 
+                if ( normalFormGame.isZeroSumGame() ) {
 
+                    normalFormGame.doZeroSumNashEquilibrium();
+
+                }
+                else {
+
+                    normalFormGame.doGeneralSumNashEquilibrium();
+
+                }
 
 
                 // TODO
@@ -227,13 +236,15 @@ public class MysteriousGameStrategy extends Strategy {
 
 
 
-                double[] strategyP1 = setStrategyProbabilitiesForPlayer(1, actionLabelsForPlayerNum1,
-                                                                                    myMysteriousGameStrategy);
-                double[] strategyP2 = setStrategyProbabilitiesForPlayer(2, actionLabelsForPlayerNum2,
-                                                                                    myMysteriousGameStrategy);
+                double[] strategyForPlayerNum1 =
+                        setStrategyProbabilitiesForPlayer(1, actionLabelsForPlayerNum1,
+                                                          myMysteriousGameStrategy);
+                double[] strategyForPlayerNum2 =
+                        setStrategyProbabilitiesForPlayer(2, actionLabelsForPlayerNum2,
+                                                          myMysteriousGameStrategy);
 
-                showStrategy(1, strategyP1, actionLabelsForPlayerNum1);
-                showStrategy(2, strategyP2, actionLabelsForPlayerNum2);
+                showStrategyForPlayer(1, strategyForPlayerNum1, actionLabelsForPlayerNum1);
+                showStrategyForPlayer(2, strategyForPlayerNum2, actionLabelsForPlayerNum2);
 
                 try {
 
@@ -298,9 +309,11 @@ public class MysteriousGameStrategy extends Strategy {
 
         double[] strategyProbabilities = new double[numActionLabels];
 
-        for (int i = 0; i < numActionLabels; i++)  {
+        for (int currentActionLabel = 0;
+             currentActionLabel < numActionLabels;
+             currentActionLabel++)  {
 
-            strategyProbabilities[i] = 0;
+            strategyProbabilities[currentActionLabel] = 0;
 
         }
 
@@ -329,7 +342,7 @@ public class MysteriousGameStrategy extends Strategy {
 
     }
 
-    public void showStrategy(int numPlayer, double[] strategyProbabilities, String[] actionLabels) {
+    public void showStrategyForPlayer(int numPlayer, double[] strategyProbabilities, String[] actionLabels) {
 
         System.out.println("Strategy for Player #" + numPlayer + ":");
 
