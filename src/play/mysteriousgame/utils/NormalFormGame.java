@@ -6,9 +6,7 @@ import scpsolver.constraints.LinearEqualsConstraint;
 import scpsolver.constraints.LinearSmallerThanEqualsConstraint;
 import scpsolver.problems.LinearProgram;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class NormalFormGame {
 
@@ -40,6 +38,15 @@ public class NormalFormGame {
     // Matrix of Utilities for Player #2
     public double[][] matrixUtilitiesForPlayer2;
 
+    public Map<Integer, String> fictitiousPlayLearningLastMovesForPlayerNum1;
+
+    public Map<Integer, String> fictitiousPlayLearningLastMovesForPlayerNum2;
+
+    public Map<Integer, Map<String, Double>> fictitiousPlayLearningBeliefsForPlayerNum1;
+
+    public Map<Integer, Map<String, Double>> fictitiousPlayLearningBeliefsForPlayerNum2;
+
+
     // Constructors:
 
     /**
@@ -62,7 +69,8 @@ public class NormalFormGame {
      * @param actionLabelsForPlayerNum2 the Action Labels for Player #2
      */
     public NormalFormGame(double[][] matrixUtilitiesForPlayer1, double[][] matrixUtilitiesForPlayer2,
-                          String[] actionLabelsForPlayerNum1, String[] actionLabelsForPlayerNum2) {
+                          String[] actionLabelsForPlayerNum1, String[] actionLabelsForPlayerNum2,
+                          boolean withFictitiousPlayLearning) {
 
         // Setting the properties and specifications for Player #1
         this.numberOfActionsForPlayerNum1 = actionLabelsForPlayerNum1.length;
@@ -129,11 +137,123 @@ public class NormalFormGame {
 
         }
 
+        if (withFictitiousPlayLearning) {
+
+            this.fictitiousPlayLearningLastMovesForPlayerNum1 = new HashMap<>();
+            this.fictitiousPlayLearningLastMovesForPlayerNum2 = new HashMap<>();
+
+            this.fictitiousPlayLearningBeliefsForPlayerNum1 = new HashMap<>();
+            this.fictitiousPlayLearningBeliefsForPlayerNum2 = new HashMap<>();
+
+            this.fictitiousPlayLearningLastMovesForPlayerNum1.put(0, "");
+            this.fictitiousPlayLearningLastMovesForPlayerNum2.put(0, "");
+
+            Map<String, Double> beliefsForPlayer1 = new HashMap<>();
+            Map<String, Double> beliefsForPlayer2 = new HashMap<>();
+
+            for (String actionLabelForPlayerNum1 : this.actionLabelsForPlayerNum1) {
+
+                beliefsForPlayer2.put(actionLabelForPlayerNum1, 0.0); //TODO confirmar / valor random
+
+            }
+
+
+            for (String actionLabelForPlayerNum2 : this.actionLabelsForPlayerNum2) {
+
+                beliefsForPlayer1.put(actionLabelForPlayerNum2, 0.0); //TODO confirmar / valor random
+
+            }
+
+            this.fictitiousPlayLearningBeliefsForPlayerNum1.put(0, beliefsForPlayer1);
+            this.fictitiousPlayLearningBeliefsForPlayerNum2.put(0, beliefsForPlayer2);
+
+        }
+
+    }
+
+    /**
+     * Adds a Fictitious Play Learning Move for a Player.
+     *
+     * @param numPlayer the number of the Player
+     *
+     * @param numLastRound the number of the Last Round
+     *
+     * @param lastMoveFromOpponent the last Move performed by the Opponent
+     *
+     */
+    public void addFictitiousPlayLearningMoveForPlayer(int numPlayer, int numLastRound, String lastMoveFromOpponent)
+    {
+
+        if (numPlayer == 1) {
+
+            this.fictitiousPlayLearningLastMovesForPlayerNum1.put(numLastRound, lastMoveFromOpponent);
+
+            Map<String, Double> beliefsFromLastRoundForPlayer1 =
+                        this.fictitiousPlayLearningBeliefsForPlayerNum1.get( ( numLastRound - 1 ) );
+
+
+            Map<String, Double> beliefsForPlayer1 = new HashMap<>();
+
+
+            for (String actionLabelForPlayerNum2 : this.actionLabelsForPlayerNum2) {
+
+                Double beliefForPlayerLastActionFrequency =
+                       beliefsFromLastRoundForPlayer1.get(actionLabelForPlayerNum2);
+
+                if ( lastMoveFromOpponent.equalsIgnoreCase(actionLabelForPlayerNum2) ) {
+
+                    beliefsForPlayer1.put(actionLabelForPlayerNum2, ( beliefForPlayerLastActionFrequency + 1.0 ) );
+
+                }
+                else {
+
+                    beliefsForPlayer1.put(actionLabelForPlayerNum2, beliefForPlayerLastActionFrequency);
+
+                }
+
+            }
+
+            this.fictitiousPlayLearningBeliefsForPlayerNum1.put(numLastRound, beliefsForPlayer1);
+
+        }
+        else {
+
+            this.fictitiousPlayLearningLastMovesForPlayerNum2.put(numLastRound, lastMoveFromOpponent);
+
+            Map<String, Double> beliefsFromLastRoundForPlayer2 =
+                    this.fictitiousPlayLearningBeliefsForPlayerNum2.get( ( numLastRound - 1 ) );
+
+
+            Map<String, Double> beliefsForPlayer2 = new HashMap<>();
+
+
+            for (String actionLabelForPlayerNum1 : this.actionLabelsForPlayerNum1) {
+
+                Double beliefForPlayerLastActionFrequency =
+                       beliefsFromLastRoundForPlayer2.get(actionLabelForPlayerNum1);
+
+                if ( lastMoveFromOpponent.equalsIgnoreCase(actionLabelForPlayerNum1) ) {
+
+                    beliefsForPlayer2.put(actionLabelForPlayerNum1, ( beliefForPlayerLastActionFrequency + 1.0 ) );
+
+                }
+                else {
+
+                    beliefsForPlayer2.put(actionLabelForPlayerNum1, beliefForPlayerLastActionFrequency);
+
+                }
+
+            }
+
+            this.fictitiousPlayLearningBeliefsForPlayerNum2.put(numLastRound, beliefsForPlayer2);
+
+        }
+
     }
 
     /**
      * Prints/Shows the Matrix Form of the Normal Form Game.
-     * <p>
+     *
      * NOTES:
      * - The names of the Actions are shortened to the 1st Letter;
      */

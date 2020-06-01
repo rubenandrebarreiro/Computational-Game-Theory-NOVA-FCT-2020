@@ -206,7 +206,8 @@ public class MysteriousGameStrategy extends Strategy {
                 NormalFormGame normalFormGame = new NormalFormGame(matrixUtilitiesForPlayer1,
                                                                    matrixUtilitiesForPlayer2,
                                                                    actionLabelsForPlayerNum1,
-                                                                   actionLabelsForPlayerNum2);
+                                                                   actionLabelsForPlayerNum2,
+                                                                  true);
 
 
                 normalFormGame.showMatrixFormGame();
