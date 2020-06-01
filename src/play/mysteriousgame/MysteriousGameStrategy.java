@@ -30,6 +30,15 @@ import java.util.*;
  */
 public class MysteriousGameStrategy extends Strategy {
 
+    private static final int NUM_MAX_ITERATIONS = 200;
+
+    private int numCurrentRound;
+
+    private String actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1;
+
+    private String actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2;
+
+
     private List<GameNode> getListGameNodesReversedPath (GameNode currentGameNode) {
 
         try {
@@ -57,12 +66,16 @@ public class MysteriousGameStrategy extends Strategy {
 
     private void checkMyOpponentMoves(List<GameNode> listGameNodesReversedPathForPlayerNum1,
                                       List<GameNode> listGameNodesReversedPathForPlayerNum2,
-                                      PlayStrategy myStrategy, NormalFormGame normalFormGame) throws GameNodeDoesNotExistException {
+                                      NormalFormGame normalFormGame,
+                                      int numCurrentRound)
 
-        Set<String> opponentMoves = new HashSet<>();
+    throws GameNodeDoesNotExistException {
 
-        // When we played as Player1 we are going to check what were the moves
-        // of our opponent as player2.
+
+        Set<String> myOpponentMoves = new HashSet<>();
+
+        // When we played as Player #1 we are going to check what were the moves
+        // of our opponent as Player #2
         for (GameNode gameNodeForPlayerNum1 : listGameNodesReversedPathForPlayerNum1) {
 
             if ( ( gameNodeForPlayerNum1.isNature() ) || ( gameNodeForPlayerNum1.isRoot() ) ) {
@@ -73,14 +86,14 @@ public class MysteriousGameStrategy extends Strategy {
 
             if (gameNodeForPlayerNum1.getAncestor().isPlayer2()) {
 
-                opponentMoves.add( gameNodeForPlayerNum1.getLabel() );
+                myOpponentMoves.add( gameNodeForPlayerNum1.getLabel() );
 
             }
 
         }
 
-        // When we played as Player2 we are going to check what were the moves
-        // of our opponent as player1.
+        // When we played as Player #2 we are going to check what were the moves
+        // of our opponent as Player #1
         for ( GameNode gameNodeForPlayerNum2 : listGameNodesReversedPathForPlayerNum2 ) {
 
             if ( ( gameNodeForPlayerNum2.isNature() ) || ( gameNodeForPlayerNum2.isRoot() ) ) {
@@ -91,40 +104,40 @@ public class MysteriousGameStrategy extends Strategy {
 
             if ( gameNodeForPlayerNum2.getAncestor().isPlayer1() ) {
 
-                opponentMoves.add( gameNodeForPlayerNum2.getLabel() );
+                myOpponentMoves.add( gameNodeForPlayerNum2.getLabel() );
 
             }
 
         }
 
+        for ( String myOpponentMove : myOpponentMoves ) {
 
-        // We now set our strategy to have a probability of 1.0 for the moves used
-        // by our adversary in the previous round and zero for the remaining ones.
-        Iterator<String> availableMoves = myStrategy.keyIterator();
+            if(showPlayerNum(myOpponentMove) == 1) {
 
-        while ( availableMoves.hasNext() ) {
+                normalFormGame.addFictitiousPlayLearningMoveForPlayer(1, numCurrentRound,
+                                                                      showActionLabel(myOpponentMove));
 
-            String availableMove = availableMoves.next();
+                this.actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1 =
+                        normalFormGame.guessMyOpponentNextMoveForPlayer(1, numCurrentRound);
 
-            if ( opponentMoves.contains(availableMove) ) {
+            }
+            else {
 
-                int numPlayer = Integer.parseInt(availableMove.split(":")[0]);
+                normalFormGame.addFictitiousPlayLearningMoveForPlayer(2, numCurrentRound,
+                                                                      showActionLabel(myOpponentMove));
 
-
-                if ( numPlayer == 1 ) {
-
-                    normalFormGame.addFictitiousPlayLearningMoveForPlayer(1, 0, availableMove);
-
-                }
-                else {
-
-                    normalFormGame.addFictitiousPlayLearningMoveForPlayer(2, 0, availableMove);
-
-                }
+                this.actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2 =
+                        normalFormGame.guessMyOpponentNextMoveForPlayer(2, numCurrentRound);
 
             }
 
         }
+
+    }
+
+    private void tryToGuessNextOpponentMove() {
+
+
 
     }
 
@@ -250,10 +263,10 @@ public class MysteriousGameStrategy extends Strategy {
                 String[] actionLabelsForPlayerNum2 = new String[numActionsForPlayerNum2];
 
                 double[][] matrixUtilitiesForPlayer1 =
-                        new double[numActionsForPlayerNum1][numActionsForPlayerNum2];
+                           new double[numActionsForPlayerNum1][numActionsForPlayerNum2];
 
                 double[][] matrixUtilitiesForPlayer2 =
-                        new double[numActionsForPlayerNum1][numActionsForPlayerNum2];
+                           new double[numActionsForPlayerNum1][numActionsForPlayerNum2];
 
                 Iterator<GameNode> childrenNodes1 = gameNodeRoot.getChildren();
 
@@ -325,21 +338,23 @@ public class MysteriousGameStrategy extends Strategy {
                 if ( ( gameNodeFinalForPlayerNum1 == null ) || ( gameNodeFinalForPlayerNum2 == null ) ) {
 
 
+                    this.numCurrentRound++;
 
                 }
                 else {
 
-                    List<GameNode> listGameNodesReversedPathForPlayerNum1 =
+                    List<GameNode> listOfOpponentLastMovesAsPlayer1 =
                                    getListGameNodesReversedPath( gameNodeFinalForPlayerNum1 );
-                    List<GameNode> listGameNodesReversedPathForPlayerNum2 =
+                    List<GameNode> listOfOpponentLastMovesAsPlayer2  =
                                    getListGameNodesReversedPath( gameNodeFinalForPlayerNum2 );
 
 
                     try {
 
-                        this.checkMyOpponentMoves(listGameNodesReversedPathForPlayerNum1,
-                                listGameNodesReversedPathForPlayerNum2,
-                                myMysteriousGameStrategy, normalFormGame);
+                        this.checkMyOpponentMoves(listOfOpponentLastMovesAsPlayer1,
+                                                  listOfOpponentLastMovesAsPlayer2,
+                                                  normalFormGame,
+                                                  this.numCurrentRound);
 
                     }
                     catch(GameNodeDoesNotExistException gameNodeDoesNotExistException) {
@@ -382,14 +397,16 @@ public class MysteriousGameStrategy extends Strategy {
 
 
                 double[] strategyForPlayerNum1 =
-                        setStrategyProbabilitiesForPlayer(1, actionLabelsForPlayerNum1,
-                                                          myMysteriousGameStrategy);
+                         setStrategyProbabilitiesForPlayer(1, actionLabelsForPlayerNum1,
+                                                           myMysteriousGameStrategy);
                 double[] strategyForPlayerNum2 =
-                        setStrategyProbabilitiesForPlayer(2, actionLabelsForPlayerNum2,
-                                                          myMysteriousGameStrategy);
+                         setStrategyProbabilitiesForPlayer(2, actionLabelsForPlayerNum2,
+                                                           myMysteriousGameStrategy);
 
                 showStrategyForPlayer(1, strategyForPlayerNum1, actionLabelsForPlayerNum1);
                 showStrategyForPlayer(2, strategyForPlayerNum2, actionLabelsForPlayerNum2);
+
+                numCurrentRound++;
 
                 try {
 
@@ -407,6 +424,12 @@ public class MysteriousGameStrategy extends Strategy {
             }
 
         }
+
+    }
+
+    public static int showPlayerNum(String actionLabel) {
+
+        return Integer.parseInt(actionLabel.split(":")[0]);
 
     }
 
@@ -448,7 +471,8 @@ public class MysteriousGameStrategy extends Strategy {
 
     }
 
-    public double[] setStrategyProbabilitiesForPlayer(int numPlayer, String[] actionLabels, PlayStrategy myStrategy) {
+    public double[] setStrategyProbabilitiesForPlayer(int numPlayer, String[] actionLabels,
+                                                      PlayStrategy myStrategy) {
 
         int numActionLabels = actionLabels.length;
 
@@ -487,7 +511,8 @@ public class MysteriousGameStrategy extends Strategy {
 
     }
 
-    public void showStrategyForPlayer(int numPlayer, double[] strategyProbabilities, String[] actionLabels) {
+    public void showStrategyForPlayer(int numPlayer, double[] strategyProbabilities,
+                                      String[] actionLabels) {
 
         System.out.println("Strategy for Player #" + numPlayer + ":");
 

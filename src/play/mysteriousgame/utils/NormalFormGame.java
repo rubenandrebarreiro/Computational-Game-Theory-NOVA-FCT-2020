@@ -171,18 +171,19 @@ public class NormalFormGame {
 
     }
 
+
+
     /**
      * Adds a Fictitious Play Learning Move for a Player.
      *
-     * @param numPlayer the number of the Player
+     * @param numPlayer the Number of the Player
      *
-     * @param numLastRound the number of the Last Round
+     * @param numLastRound the Number of the Last Round
      *
-     * @param lastMoveFromOpponent the last Move performed by the Opponent
+     * @param lastMoveFromOpponent the Last Move performed by the Opponent
      *
      */
-    public void addFictitiousPlayLearningMoveForPlayer(int numPlayer, int numLastRound, String lastMoveFromOpponent)
-    {
+    public void addFictitiousPlayLearningMoveForPlayer(int numPlayer, int numLastRound, String lastMoveFromOpponent)  {
 
         if (numPlayer == 1) {
 
@@ -246,6 +247,75 @@ public class NormalFormGame {
             }
 
             this.fictitiousPlayLearningBeliefsForPlayerNum2.put(numLastRound, beliefsForPlayer2);
+
+        }
+
+    }
+
+    public String guessMyOpponentNextMoveForPlayer(int numPlayer, int numLastRound) {
+
+        if ( numPlayer == 1 ) {
+
+            Map<String, Double> beliefsFromCurrentRoundForPlayer1 =
+                                this.fictitiousPlayLearningBeliefsForPlayerNum1.get( numLastRound );
+
+            double maximumValueForBeliefsFromCurrentRoundForPlayer1 = Double.MIN_VALUE;
+
+            String actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1 = "";
+
+            for ( String actionLabelForBeliefsFromCurrentRoundForPlayer1 :
+                         beliefsFromCurrentRoundForPlayer1.keySet() ) {
+
+                double currentValueForBeliefsFromCurrentRoundForPlayer1 =
+                       beliefsFromCurrentRoundForPlayer1
+                               .get(actionLabelForBeliefsFromCurrentRoundForPlayer1);
+
+                if ( maximumValueForBeliefsFromCurrentRoundForPlayer1 <
+                     currentValueForBeliefsFromCurrentRoundForPlayer1 ) {
+
+                    maximumValueForBeliefsFromCurrentRoundForPlayer1 =
+                            currentValueForBeliefsFromCurrentRoundForPlayer1;
+
+                    actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1 =
+                            actionLabelForBeliefsFromCurrentRoundForPlayer1;
+
+                }
+
+            }
+
+            return actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1;
+
+        }
+        else {
+
+            Map<String, Double> beliefsFromCurrentRoundForPlayer2 =
+                    this.fictitiousPlayLearningBeliefsForPlayerNum2.get( numLastRound );
+
+            double maximumValueForBeliefsFromCurrentRoundForPlayer2 = Double.MIN_VALUE;
+
+            String actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2 = "";
+
+            for ( String actionLabelForBeliefsFromCurrentRoundForPlayer2 :
+                         beliefsFromCurrentRoundForPlayer2.keySet() ) {
+
+                double currentValueForBeliefsFromCurrentRoundForPlayer2 =
+                        beliefsFromCurrentRoundForPlayer2
+                                .get(actionLabelForBeliefsFromCurrentRoundForPlayer2);
+
+                if ( maximumValueForBeliefsFromCurrentRoundForPlayer2 <
+                        currentValueForBeliefsFromCurrentRoundForPlayer2 ) {
+
+                    maximumValueForBeliefsFromCurrentRoundForPlayer2 =
+                            currentValueForBeliefsFromCurrentRoundForPlayer2;
+
+                    actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2 =
+                            actionLabelForBeliefsFromCurrentRoundForPlayer2;
+
+                }
+
+            }
+
+            return actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2;
 
         }
 
@@ -811,10 +881,12 @@ public class NormalFormGame {
 
                 if (columnSubset[activeColumn]) {
 
+                    // Get utility from NormalGame
                     double utilitiesForPlayerNum1 =
-                            this.matrixUtilitiesForPlayer1[activeRows.get(currentNotDominatedRow)][activeColumn]; // Get utility from NormalGame
+                            this.matrixUtilitiesForPlayer1[activeRows.get(currentNotDominatedRow)][activeColumn];
 
-                    constraintsMatrix[currentNotDominatedRow][auxiliaryIndex] = utilitiesForPlayerNum1; // Add utility multiplied by the P2's action probability
+                    // Add utility multiplied by the P2's action probability
+                    constraintsMatrix[currentNotDominatedRow][auxiliaryIndex] = utilitiesForPlayerNum1;
 
                     auxiliaryIndex++; // Found subset element, get next index ready
 
