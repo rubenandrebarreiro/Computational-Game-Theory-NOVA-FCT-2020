@@ -321,6 +321,21 @@ public class NormalFormGame {
 
     }
 
+    public void computeBestResponses() {
+
+        if ( this.isAPrisonerDilemmaGame(this.matrixUtilitiesForPlayer1, this.matrixUtilitiesForPlayer2) ) {
+
+
+
+        }
+        else {
+
+
+
+        }
+
+    }
+
     /**
      * Prints/Shows the Matrix Form of the Normal Form Game.
      *
@@ -457,6 +472,32 @@ public class NormalFormGame {
         }
 
         return true;
+
+    }
+
+    private boolean isAPrisonerDilemmaGame(double[][] matrixUtilitiesForPlayer1,
+                                           double[][] matrixUtilitiesForPlayer2) {
+
+        if ( ( matrixUtilitiesForPlayer1.length == 2 ) && ( matrixUtilitiesForPlayer1[0].length == 2 ) &&
+                ( matrixUtilitiesForPlayer2.length == 2 ) && ( matrixUtilitiesForPlayer2[0].length == 2 ) ) {
+
+            if ( ( matrixUtilitiesForPlayer1[0][0] == matrixUtilitiesForPlayer2[0][0] ) &&
+                    ( matrixUtilitiesForPlayer1[1][1] == matrixUtilitiesForPlayer2[1][1] ) &&
+                    ( matrixUtilitiesForPlayer1[0][1] == matrixUtilitiesForPlayer2[1][0] ) &&
+                    ( matrixUtilitiesForPlayer1[1][0] == matrixUtilitiesForPlayer2[0][1]) ) {
+
+                double a = matrixUtilitiesForPlayer1[1][0];
+                double b = matrixUtilitiesForPlayer1[0][0];
+                double c = matrixUtilitiesForPlayer1[1][1];
+                double d = matrixUtilitiesForPlayer1[0][1];
+
+                return ( (a > b) && (b > c) && (c > d) );
+
+            }
+
+        }
+
+        return false;
 
     }
 
