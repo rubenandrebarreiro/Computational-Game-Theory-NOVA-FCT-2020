@@ -8,7 +8,7 @@ import play.exception.InvalidStrategyException;
 import play.mysteriousgame.utils.IteratedDominanceByLinearProgramming;
 import play.mysteriousgame.utils.NormalFormGame;
 
-import java.util.Iterator;
+import java.util.*;
 
 /**
  *
@@ -30,6 +30,105 @@ import java.util.Iterator;
  */
 public class MysteriousGameStrategy extends Strategy {
 
+    private List<GameNode> getListGameNodesReversedPath (GameNode currentGameNode) {
+
+        try {
+
+            GameNode ancestorGameNode = currentGameNode.getAncestor();
+
+            List<GameNode> listGameNodesReversedPath = this.getListGameNodesReversedPath(ancestorGameNode);
+
+            listGameNodesReversedPath.add(currentGameNode);
+
+            return listGameNodesReversedPath;
+
+        }
+        catch (GameNodeDoesNotExistException gameNodeDoesNotExistException) {
+
+            List<GameNode> listGameNodes = new ArrayList<>();
+
+            listGameNodes.add(currentGameNode);
+
+            return listGameNodes;
+
+        }
+
+    }
+
+    private void checkMyOpponentMoves(List<GameNode> listGameNodesReversedPathForPlayerNum1,
+                                      List<GameNode> listGameNodesReversedPathForPlayerNum2,
+                                      PlayStrategy myStrategy, NormalFormGame normalFormGame) throws GameNodeDoesNotExistException {
+
+        Set<String> opponentMoves = new HashSet<>();
+
+        // When we played as Player1 we are going to check what were the moves
+        // of our opponent as player2.
+        for (GameNode gameNodeForPlayerNum1 : listGameNodesReversedPathForPlayerNum1) {
+
+            if ( ( gameNodeForPlayerNum1.isNature() ) || ( gameNodeForPlayerNum1.isRoot() ) ) {
+
+                continue;
+
+            }
+
+            if (gameNodeForPlayerNum1.getAncestor().isPlayer2()) {
+
+                opponentMoves.add( gameNodeForPlayerNum1.getLabel() );
+
+            }
+
+        }
+
+        // When we played as Player2 we are going to check what were the moves
+        // of our opponent as player1.
+        for ( GameNode gameNodeForPlayerNum2 : listGameNodesReversedPathForPlayerNum2 ) {
+
+            if ( ( gameNodeForPlayerNum2.isNature() ) || ( gameNodeForPlayerNum2.isRoot() ) ) {
+
+                continue;
+
+            }
+
+            if ( gameNodeForPlayerNum2.getAncestor().isPlayer1() ) {
+
+                opponentMoves.add( gameNodeForPlayerNum2.getLabel() );
+
+            }
+
+        }
+
+
+        // We now set our strategy to have a probability of 1.0 for the moves used
+        // by our adversary in the previous round and zero for the remaining ones.
+        Iterator<String> availableMoves = myStrategy.keyIterator();
+
+        while ( availableMoves.hasNext() ) {
+
+            String availableMove = availableMoves.next();
+
+            if ( opponentMoves.contains(availableMove) ) {
+
+                int numPlayer = Integer.parseInt(availableMove.split(":")[0]);
+
+
+                if ( numPlayer == 1 ) {
+
+                    normalFormGame.addFictitiousPlayLearningMoveForPlayer(1, 0, availableMove);
+
+                }
+                else {
+
+                    normalFormGame.addFictitiousPlayLearningMoveForPlayer(2, 0, availableMove);
+
+                }
+
+            }
+
+        }
+
+    }
+
+
     @Override
     public void execute() throws InterruptedException {
 
@@ -44,6 +143,13 @@ public class MysteriousGameStrategy extends Strategy {
             Thread.sleep(1000);
 
         }
+
+
+        GameNode gameNodeFinalForPlayerNum1 = null;
+        GameNode gameNodeFinalForPlayerNum2 = null;
+
+
+
 
         // Infinite Loop
         while(true) {
@@ -68,7 +174,7 @@ public class MysteriousGameStrategy extends Strategy {
 
                 if (myMysteriousGameStrategy.getFinalP1Node() != -1) {
 
-                    GameNode gameNodeFinalForPlayerNum1 =
+                    gameNodeFinalForPlayerNum1 =
                             this.tree.getNodeByIndex(myMysteriousGameStrategy.getFinalP1Node());
 
                     GameNode gameNodeFinalAncestorForPlayerNum1 = null;
@@ -102,7 +208,7 @@ public class MysteriousGameStrategy extends Strategy {
 
                 if (myMysteriousGameStrategy.getFinalP2Node() != -1) {
 
-                    GameNode gameNodeFinalForPlayerNum2 =
+                    gameNodeFinalForPlayerNum2 =
                             this.tree.getNodeByIndex(myMysteriousGameStrategy.getFinalP2Node());
 
                     GameNode gameNodeFinalAncestorForPlayerNum2 = null;
@@ -211,6 +317,44 @@ public class MysteriousGameStrategy extends Strategy {
 
 
                 normalFormGame.showMatrixFormGame();
+
+
+
+
+
+                if ( ( gameNodeFinalForPlayerNum1 == null ) || ( gameNodeFinalForPlayerNum2 == null ) ) {
+
+
+
+                }
+                else {
+
+                    List<GameNode> listGameNodesReversedPathForPlayerNum1 =
+                                   getListGameNodesReversedPath( gameNodeFinalForPlayerNum1 );
+                    List<GameNode> listGameNodesReversedPathForPlayerNum2 =
+                                   getListGameNodesReversedPath( gameNodeFinalForPlayerNum2 );
+
+
+                    try {
+
+                        this.checkMyOpponentMoves(listGameNodesReversedPathForPlayerNum1,
+                                listGameNodesReversedPathForPlayerNum2,
+                                myMysteriousGameStrategy, normalFormGame);
+
+                    }
+                    catch(GameNodeDoesNotExistException gameNodeDoesNotExistException) {
+
+                        System.err.println("PANIC: Strategy structure does not match the game.");
+
+                    }
+
+                }
+
+
+
+
+
+
 
 
                 // Solve domination
