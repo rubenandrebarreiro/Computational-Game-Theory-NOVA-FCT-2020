@@ -32,7 +32,10 @@ public class MysteriousGameStrategy extends Strategy {
 
     private static final int NUM_MAX_ITERATIONS = 200;
 
-    private int numCurrentRound;
+    private static final int MIN_SIZE_SAMPLE = (int) ( 0.1 * NUM_MAX_ITERATIONS );
+
+
+    private int numCurrentRoundsPlayed;
 
     private String actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1;
 
@@ -329,101 +332,229 @@ public class MysteriousGameStrategy extends Strategy {
 
                 normalFormGame.showMatrixFormGame();
 
-                String[] bestResponsesAsActionLabels = new String[2];
-
 
                 if ( ( gameNodeFinalForPlayerNum1 == null ) || ( gameNodeFinalForPlayerNum2 == null ) ) {
 
+                    // Solve domination
+                    IteratedDominanceByLinearProgramming.solveIteratedDominance(normalFormGame);
 
-                    this.numCurrentRound++;
+                    normalFormGame.showMatrixFormGame();
+
+                    if ( normalFormGame.isZeroSumGame() ) {
+
+                        double[][] zeroSumNash = normalFormGame.doZeroSumNashEquilibrium();
+
+                        System.out.println("****ZERO SUM NASH EQUILIBRIUM****");
+
+                        normalFormGame.printNashEquilibriumMatrix(actionLabelsForPlayerNum1,
+                                actionLabelsForPlayerNum2,
+                                zeroSumNash);
+
+
+                        for (int currentActionForPlayer1 = 0;
+                             currentActionForPlayer1 < actionLabelsForPlayerNum1.length;
+                             currentActionForPlayer1++) {
+
+                            myMysteriousGameStrategy.put(actionLabelsForPlayerNum1[currentActionForPlayer1],
+                                    ( Math.round( zeroSumNash[0][currentActionForPlayer1] * 100.0 )
+                                            / 100.0 ) );
+
+                        }
+
+                        for (int currentActionForPlayer2 = 0;
+                             currentActionForPlayer2 < actionLabelsForPlayerNum2.length;
+                             currentActionForPlayer2++) {
+
+                            myMysteriousGameStrategy.put(actionLabelsForPlayerNum1[currentActionForPlayer2],
+                                    ( Math.round( zeroSumNash[1][currentActionForPlayer2] * 100.0 )
+                                            / 100.0 ) );
+
+                        }
+
+                    }
+                    else {
+
+                        double[][] generalSumNashEquilibrium = normalFormGame.doGeneralSumNashEquilibrium();
+
+                        System.out.println("****GENERAL SUM NASH EQUILIBRIUM****");
+
+                        normalFormGame.printNashEquilibriumMatrix(actionLabelsForPlayerNum1,
+                                actionLabelsForPlayerNum2,
+                                generalSumNashEquilibrium);
+
+                        for (int currentActionForPlayer1 = 0;
+                             currentActionForPlayer1 < actionLabelsForPlayerNum1.length;
+                             currentActionForPlayer1++) {
+
+                            myMysteriousGameStrategy.put(actionLabelsForPlayerNum1[currentActionForPlayer1],
+                                    ( Math.round( generalSumNashEquilibrium[0][currentActionForPlayer1] * 100.0 )
+                                            / 100.0 ) );
+
+                        }
+
+                        for (int currentActionForPlayer2 = 0;
+                             currentActionForPlayer2 < actionLabelsForPlayerNum2.length;
+                             currentActionForPlayer2++) {
+
+                            myMysteriousGameStrategy.put(actionLabelsForPlayerNum1[currentActionForPlayer2],
+                                    ( Math.round( generalSumNashEquilibrium[1][currentActionForPlayer2] * 100.0 )
+                                            / 100.0 ) );
+
+                        }
+
+                    }
+
+                    this.numCurrentRoundsPlayed++;
 
                 }
                 else {
 
-                    List<GameNode> listOfOpponentLastMovesAsPlayer1 =
-                                   getListGameNodesReversedPath( gameNodeFinalForPlayerNum1 );
-                    List<GameNode> listOfOpponentLastMovesAsPlayer2  =
-                                   getListGameNodesReversedPath( gameNodeFinalForPlayerNum2 );
+                    // The Learning Sample isn't good yet,
+                    // so we will play accordingly to the Nash Equilibrium for Zero-Sum/General-Sum
+                    // and Iterated Removal of Strategies Strictly Dominated
+                    if (this.numCurrentRoundsPlayed < MIN_SIZE_SAMPLE) {
+
+                        // Solve domination
+                        IteratedDominanceByLinearProgramming.solveIteratedDominance(normalFormGame);
+
+                        normalFormGame.showMatrixFormGame();
+
+                        if ( normalFormGame.isZeroSumGame() ) {
+
+                            double[][] zeroSumNash = normalFormGame.doZeroSumNashEquilibrium();
+
+                            System.out.println("****ZERO SUM NASH EQUILIBRIUM****");
+
+                            normalFormGame.printNashEquilibriumMatrix(actionLabelsForPlayerNum1,
+                                    actionLabelsForPlayerNum2,
+                                    zeroSumNash);
 
 
-                    try {
+                            for (int currentActionForPlayer1 = 0;
+                                 currentActionForPlayer1 < actionLabelsForPlayerNum1.length;
+                                 currentActionForPlayer1++) {
 
-                        bestResponsesAsActionLabels =
-                                this.checkMyOpponentMovesAndComputeBestResponses(listOfOpponentLastMovesAsPlayer1,
-                                                                                 listOfOpponentLastMovesAsPlayer2,
-                                                                                 normalFormGame,
-                                                                                 this.numCurrentRound);
-
-                        // We now set our strategy to have a probability of 1.0 for the moves used
-                        // by our adversary in the previous round and zero for the remaining ones.
-                        Iterator<String> allAvailableMoves = myMysteriousGameStrategy.keyIterator();
-
-                        while( allAvailableMoves.hasNext() ) {
-
-                            String availableMoveActionLabel = allAvailableMoves.next();
-
-                            if ( ( showActionLabel(availableMoveActionLabel)
-                                   .equalsIgnoreCase(bestResponsesAsActionLabels[0]) ) &&
-                                 ( showPlayerNum(availableMoveActionLabel) == 1 ) ) {
-
-                                myMysteriousGameStrategy.put(availableMoveActionLabel, 1d);
-
-                                System.err.println("Setting " + availableMoveActionLabel + " to probability 1.0!!!");
-
-                            }
-                            else if ( ( showActionLabel(availableMoveActionLabel)
-                                        .equalsIgnoreCase(bestResponsesAsActionLabels[1]) ) &&
-                                      ( showPlayerNum(availableMoveActionLabel) == 2 ) ) {
-
-                                myMysteriousGameStrategy.put(availableMoveActionLabel, 1d);
-
-                                System.err.println("Setting " + availableMoveActionLabel + " to probability 1.0!!!");
+                                myMysteriousGameStrategy.put(actionLabelsForPlayerNum1[currentActionForPlayer1],
+                                        ( Math.round( zeroSumNash[0][currentActionForPlayer1] * 100.0 )
+                                                / 100.0 ) );
 
                             }
 
-                            else {
+                            for (int currentActionForPlayer2 = 0;
+                                 currentActionForPlayer2 < actionLabelsForPlayerNum2.length;
+                                 currentActionForPlayer2++) {
 
-                                myMysteriousGameStrategy.put(availableMoveActionLabel, 0d);
+                                myMysteriousGameStrategy.put(actionLabelsForPlayerNum1[currentActionForPlayer2],
+                                        ( Math.round( zeroSumNash[1][currentActionForPlayer2] * 100.0 )
+                                                / 100.0 ) );
 
-                                System.err.println("Setting " + availableMoveActionLabel + " to probability 0.0!!!");
+                            }
+
+                        }
+                        else {
+
+                            double[][] generalSumNashEquilibrium = normalFormGame.doGeneralSumNashEquilibrium();
+
+                            System.out.println("****GENERAL SUM NASH EQUILIBRIUM****");
+
+                            normalFormGame.printNashEquilibriumMatrix(actionLabelsForPlayerNum1,
+                                    actionLabelsForPlayerNum2,
+                                    generalSumNashEquilibrium);
+
+                            for (int currentActionForPlayer1 = 0;
+                                 currentActionForPlayer1 < actionLabelsForPlayerNum1.length;
+                                 currentActionForPlayer1++) {
+
+                                myMysteriousGameStrategy.put(actionLabelsForPlayerNum1[currentActionForPlayer1],
+                                        ( Math.round( generalSumNashEquilibrium[0][currentActionForPlayer1] * 100.0 )
+                                                / 100.0 ) );
+
+                            }
+
+                            for (int currentActionForPlayer2 = 0;
+                                 currentActionForPlayer2 < actionLabelsForPlayerNum2.length;
+                                 currentActionForPlayer2++) {
+
+                                myMysteriousGameStrategy.put(actionLabelsForPlayerNum1[currentActionForPlayer2],
+                                        ( Math.round( generalSumNashEquilibrium[1][currentActionForPlayer2] * 100.0 )
+                                                / 100.0 ) );
 
                             }
 
                         }
 
                     }
-                    catch(GameNodeDoesNotExistException gameNodeDoesNotExistException) {
 
-                        System.err.println("PANIC: Strategy structure does not match the game.");
+                    // The Learning Sample is already good,
+                    // so we will play the Fictitious Play Learning
+                    else {
+
+                        List<GameNode> listOfOpponentLastMovesAsPlayer1 =
+                                getListGameNodesReversedPath( gameNodeFinalForPlayerNum1 );
+                        List<GameNode> listOfOpponentLastMovesAsPlayer2  =
+                                getListGameNodesReversedPath( gameNodeFinalForPlayerNum2 );
+
+
+                        String[] bestResponsesAsActionLabels;
+
+                        try {
+
+                            bestResponsesAsActionLabels =
+                                    this.checkMyOpponentMovesAndComputeBestResponses
+                                            (listOfOpponentLastMovesAsPlayer1,
+                                             listOfOpponentLastMovesAsPlayer2,
+                                             normalFormGame,
+                                             this.numCurrentRoundsPlayed);
+
+                            // We now set our strategy to have a probability of 1.0 for the moves used
+                            // by our adversary in the previous round and zero for the remaining ones.
+                            Iterator<String> allAvailableMoves = myMysteriousGameStrategy.keyIterator();
+
+                            while( allAvailableMoves.hasNext() ) {
+
+                                String availableMoveActionLabel = allAvailableMoves.next();
+
+                                if ( ( showActionLabel(availableMoveActionLabel)
+                                       .equalsIgnoreCase(bestResponsesAsActionLabels[0]) ) &&
+                                     ( showPlayerNum(availableMoveActionLabel) == 1 ) ) {
+
+                                    myMysteriousGameStrategy.put(availableMoveActionLabel, 1d);
+
+                                    System.err.println("Setting " + availableMoveActionLabel + " to probability 1.0!!!");
+
+                                }
+                                else if ( ( showActionLabel(availableMoveActionLabel)
+                                            .equalsIgnoreCase(bestResponsesAsActionLabels[1]) ) &&
+                                          ( showPlayerNum(availableMoveActionLabel) == 2 ) ) {
+
+                                    myMysteriousGameStrategy.put(availableMoveActionLabel, 1d);
+
+                                    System.err.println("Setting " + availableMoveActionLabel + " to probability 1.0!!!");
+
+                                }
+
+                                else {
+
+                                    myMysteriousGameStrategy.put(availableMoveActionLabel, 0d);
+
+                                    System.err.println("Setting " + availableMoveActionLabel + " to probability 0.0!!!");
+
+                                }
+
+                            }
+
+                        }
+                        catch(GameNodeDoesNotExistException gameNodeDoesNotExistException) {
+
+                            System.err.println("PANIC: Strategy structure doesn't match the game.");
+
+                        }
 
                     }
 
-                }
-
-
-
-
-
-                // Solve domination
-                IteratedDominanceByLinearProgramming.solveIteratedDominance(normalFormGame);
-
-                normalFormGame.showMatrixFormGame();
-
-                if ( normalFormGame.isZeroSumGame() ) {
-
-                    normalFormGame.doZeroSumNashEquilibrium();
+                    this.numCurrentRoundsPlayed++;
 
                 }
-                else {
-
-                    normalFormGame.doGeneralSumNashEquilibrium();
-
-                }
-
-
-                // TODO
-
-                numCurrentRound++;
 
                 try {
 
@@ -483,20 +614,6 @@ public class MysteriousGameStrategy extends Strategy {
             }
 
             System.out.println("|");
-
-        }
-
-    }
-
-    public void showStrategyForPlayer(int numPlayer, double[] strategyProbabilities,
-                                      String[] actionLabels) {
-
-        System.out.println("Strategy for Player #" + numPlayer + ":");
-
-        for (int currentActionLabel = 0; currentActionLabel < actionLabels.length; currentActionLabel++) {
-
-            System.out.println("   " + strategyProbabilities[ currentActionLabel ] + ":"
-                                     + showActionLabel( actionLabels[ currentActionLabel ] ) );
 
         }
 

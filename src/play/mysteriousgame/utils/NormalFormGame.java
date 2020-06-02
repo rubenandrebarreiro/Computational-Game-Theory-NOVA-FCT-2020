@@ -327,52 +327,42 @@ public class NormalFormGame {
         String[] bestResponsesActionLabels = new String[2];
 
 
+        int indexOfActionLabelForPlayerNum2 =
+                this.actionLabelsForPlayerNum2
+                        .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1);
 
-        if ( this.isAPrisonerDilemmaGame(this.matrixUtilitiesForPlayer1, this.matrixUtilitiesForPlayer2) ) {
-
-
-
-        }
-        else {
-
-            int indexOfActionLabelForPlayerNum2 =
-                    this.actionLabelsForPlayerNum2
-                            .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1);
-
-            int indexOfActionLabelForPlayerNum1 =
-                    this.actionLabelsForPlayerNum1
-                            .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2);
+        int indexOfActionLabelForPlayerNum1 =
+                this.actionLabelsForPlayerNum1
+                        .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2);
 
 
-            double maxValuePayoffAsBestResponseForPlayer1 = Double.MIN_VALUE;
-            double maxValuePayoffAsBestResponseForPlayer2 = Double.MIN_VALUE;
+        double maxValuePayoffAsBestResponseForPlayer1 = Double.MIN_VALUE;
+        double maxValuePayoffAsBestResponseForPlayer2 = Double.MIN_VALUE;
 
-            for (int currentRow = 0; currentRow < this.numberOfActionsForPlayerNum1; currentRow++) {
+        for (int currentRow = 0; currentRow < this.numberOfActionsForPlayerNum1; currentRow++) {
 
-                if ( maxValuePayoffAsBestResponseForPlayer1 <
-                     this.matrixUtilitiesForPlayer1[currentRow][indexOfActionLabelForPlayerNum2] ) {
+            if ( maxValuePayoffAsBestResponseForPlayer1 <
+                 this.matrixUtilitiesForPlayer1[currentRow][indexOfActionLabelForPlayerNum2] ) {
 
-                    maxValuePayoffAsBestResponseForPlayer1 =
-                            this.matrixUtilitiesForPlayer1[currentRow][indexOfActionLabelForPlayerNum2];
+                maxValuePayoffAsBestResponseForPlayer1 =
+                        this.matrixUtilitiesForPlayer1[currentRow][indexOfActionLabelForPlayerNum2];
 
-                    bestResponsesActionLabels[0] = this.actionLabelsForPlayerNum1.get(currentRow);
-
-                }
+                bestResponsesActionLabels[0] = this.actionLabelsForPlayerNum1.get(currentRow);
 
             }
 
+        }
 
-            for (int currentColumn = 0; currentColumn < this.numberOfActionsForPlayerNum2; currentColumn++) {
 
-                if ( maxValuePayoffAsBestResponseForPlayer2 <
-                        this.matrixUtilitiesForPlayer2[indexOfActionLabelForPlayerNum1][currentColumn] ) {
+        for (int currentColumn = 0; currentColumn < this.numberOfActionsForPlayerNum2; currentColumn++) {
 
-                    maxValuePayoffAsBestResponseForPlayer2 =
-                            this.matrixUtilitiesForPlayer2[indexOfActionLabelForPlayerNum1][currentColumn];
+            if ( maxValuePayoffAsBestResponseForPlayer2 <
+                    this.matrixUtilitiesForPlayer2[indexOfActionLabelForPlayerNum1][currentColumn] ) {
 
-                    bestResponsesActionLabels[1] = this.actionLabelsForPlayerNum2.get(currentColumn);
+                maxValuePayoffAsBestResponseForPlayer2 =
+                        this.matrixUtilitiesForPlayer2[indexOfActionLabelForPlayerNum1][currentColumn];
 
-                }
+                bestResponsesActionLabels[1] = this.actionLabelsForPlayerNum2.get(currentColumn);
 
             }
 
@@ -521,6 +511,8 @@ public class NormalFormGame {
 
     }
 
+
+    // TODO
     private boolean isAPrisonerDilemmaGame(double[][] matrixUtilitiesForPlayer1,
                                            double[][] matrixUtilitiesForPlayer2) {
 
@@ -1152,6 +1144,39 @@ public class NormalFormGame {
         System.out.println(Arrays.toString(linearProgramSolutions));
 
         return linearProgramSolutions;
+
+    }
+
+    public void printNashEquilibriumMatrix(String[] actionLabelsForPlayer1, String[] actionLabelsForPlayer2,
+                                           double[][] nashEquilibriumMatrix) {
+
+        System.out.println("Nash Equilibrium for Player #1:");
+
+        for (int currentActionLabelForPlayer1 = 0;
+             currentActionLabelForPlayer1 < actionLabelsForPlayer1.length;
+             currentActionLabelForPlayer1++) {
+
+            System.out.println("  " + showLabel(actionLabelsForPlayer1[currentActionLabelForPlayer1]) + ": " +
+                    ( Math.round( nashEquilibriumMatrix[0][currentActionLabelForPlayer1] * 100.0)  / 100.0 ) );
+
+        }
+
+        System.out.println("Nash Equilibrium for Player #2:");
+
+        for (int currentActionLabelForPlayer2 = 0;
+             currentActionLabelForPlayer2 < actionLabelsForPlayer2.length;
+             currentActionLabelForPlayer2++) {
+
+            System.out.println("  " + showLabel(actionLabelsForPlayer2[currentActionLabelForPlayer2]) + ": " +
+                    ( Math.round(nashEquilibriumMatrix[1][currentActionLabelForPlayer2] * 100.0) / 100.0 ) );
+
+        }
+
+    }
+
+    public static String showLabel(String label) {
+
+        return label.substring(label.lastIndexOf(':') + 1);
 
     }
 
