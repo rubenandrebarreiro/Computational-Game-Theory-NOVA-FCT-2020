@@ -1006,10 +1006,10 @@ public class NormalFormGame {
     public double[][] doBestResponse(double[] strategyP1, double[] strategyP2){
         if(bestResponseP1Index == null){
             bestResponseP1Index = new int[strategyP2.length];
-            for (int i = 0; i < nCol; i++) {
-                for (int j = 0; j < nRow; j++) {
-                    if( u1[j][i] > u1[bestResponseP1Index[i]][i] ){
-                        bestResponseP1Index[i] = j;
+            for (int j = 0; j < nCol; j++) {
+                for (int i = 0; i < nRow; i++) {
+                    if( u1[i][j] > u1[bestResponseP1Index[j]][j] ){
+                        bestResponseP1Index[j] = i;
                     }
                 }
             }
