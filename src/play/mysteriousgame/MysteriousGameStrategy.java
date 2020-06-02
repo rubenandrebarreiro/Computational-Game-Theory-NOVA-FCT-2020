@@ -520,7 +520,8 @@ public class MysteriousGameStrategy extends Strategy {
 
                                     myMysteriousGameStrategy.put(availableMoveActionLabel, 1d);
 
-                                    System.err.println("Setting " + availableMoveActionLabel + " to probability 1.0!!!");
+                                    System.err.println("Setting " + availableMoveActionLabel +
+                                                       " to probability 1.0!!!");
 
                                 }
                                 else if ( ( showActionLabel(availableMoveActionLabel)
@@ -529,7 +530,8 @@ public class MysteriousGameStrategy extends Strategy {
 
                                     myMysteriousGameStrategy.put(availableMoveActionLabel, 1d);
 
-                                    System.err.println("Setting " + availableMoveActionLabel + " to probability 1.0!!!");
+                                    System.err.println("Setting " + availableMoveActionLabel +
+                                                       " to probability 1.0!!!");
 
                                 }
 
@@ -537,7 +539,8 @@ public class MysteriousGameStrategy extends Strategy {
 
                                     myMysteriousGameStrategy.put(availableMoveActionLabel, 0d);
 
-                                    System.err.println("Setting " + availableMoveActionLabel + " to probability 0.0!!!");
+                                    System.err.println("Setting " + availableMoveActionLabel +
+                                                       " to probability 0.0!!!");
 
                                 }
 
