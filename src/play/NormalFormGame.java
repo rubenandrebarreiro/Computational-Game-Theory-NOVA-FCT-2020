@@ -21,6 +21,8 @@ public class NormalFormGame {
     public double[][] u1;                // utility matrix of player 1
     public double[][] u2;                // utility matrix of player 2
 
+    int[] bestResponseP1Index, bestResponseP2Index;
+
     public NormalFormGame() {
     }
 
@@ -164,119 +166,6 @@ public class NormalFormGame {
 
 
         return new double[][]{strategy1, strategy2};
-    }
-
-    double[] p1ZeroSum(int nRows, int nCols, ArrayList<Integer> iRow, ArrayList<Integer> jCol) {
-
-        // set P terms to one
-        double[] c = new double[nRows + 1];
-        for (int i = 0; i < nRows; i++) {
-            c[i] = 0.0;
-        }
-        c[nRows] = 1.0;
-
-        // set constraints independent term to
-        // utilities of row to dominate
-        double[] b = new double[nCols + 1];
-        for (int j = 0; j < nCols; j++) {
-            b[j] = 0.0;
-        }
-        b[nCols] = 1;
-
-        // constraints matrix
-        double[][] A = new double[nCols + 1][nRows + 1];
-        double minUtil = 0;
-
-        // add utilites to X's
-        for (int j = 0; j < nCols; j++) {
-            for (int i = 0; i < nRows; i++) {
-                A[j][i] = u2[iRow.get(i)][jCol.get(j)];
-                A[nCols][i] = 1.0;
-                if (A[j][i] < minUtil) {
-                    minUtil = A[j][i];
-                }
-            }
-            A[j][nRows] = -1.0;
-        }
-
-
-        // Set lower bounds
-        double[] lb = new double[nRows + 1];
-        for (int i = 0; i <= nRows; i++) {
-            lb[i] = 0;
-        }
-        lb[nRows] = minUtil;
-
-
-        LinearProgram lp = new LinearProgram(c);
-        lp.setMinProblem(true);
-        for (int j = 0; j < nCols; j++) {
-            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[j], b[j], "c" + j));
-        }
-        lp.addConstraint(new LinearEqualsConstraint(A[nCols], b[nCols], "c" + nCols));
-        lp.setLowerbound(lb);
-        LinearProgramming.showLP(lp);
-        double[] x = new double[c.length];
-        x = LinearProgramming.solveLP(lp);
-        LinearProgramming.showSolution(x, lp);
-
-        return x;
-    }
-
-    double[] p2ZeroSum(int nCols, int nRows, ArrayList<Integer> iRow, ArrayList<Integer> jCol) {
-
-        // set P terms to one
-        double[] c = new double[nCols + 1];
-        for (int i = 0; i < nCols; i++) {
-            c[i] = 0.0;
-        }
-        c[nCols] = 1.0;
-
-        // set constraints independent term to
-        // utilities of row to dominate
-        double[] b = new double[nRows + 1];
-        for (int j = 0; j < nRows; j++) {
-            b[j] = 0.0;
-        }
-        b[nRows] = 1;
-
-        // constraints matrix
-        double[][] A = new double[nRows + 1][nCols + 1];
-        double minUtil = 0;
-
-        // add utilites to X's
-        for (int i = 0; i < nRows; i++) {
-            for (int j = 0; j < nCols; j++) {
-                A[i][j] = u1[iRow.get(i)][jCol.get(j)];
-                A[nRows][j] = 1.0;
-                if (A[i][j] < minUtil) {
-                    minUtil = A[i][j];
-                }
-            }
-            A[i][nCols] = -1.0;
-        }
-
-
-        // Set lower bounds
-        double[] lb = new double[nCols + 1];
-        for (int j = 0; j <= nCols; j++) {
-            lb[j] = 0;
-        }
-        lb[nCols] = minUtil;
-
-
-        LinearProgram lp = new LinearProgram(c);
-        lp.setMinProblem(true);
-        for (int i = 0; i < nRows; i++) {
-            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
-        }
-        lp.addConstraint(new LinearEqualsConstraint(A[nRows], b[nRows], "c" + nRows));
-        lp.setLowerbound(lb);
-        LinearProgramming.showLP(lp);
-        double[] x = new double[c.length];
-        x = LinearProgramming.solveLP(lp);
-        LinearProgramming.showSolution(x, lp);
-        return x;
     }
 
     public double[][][] doAllGeneralSum() {
@@ -517,6 +406,130 @@ public class NormalFormGame {
             }
         }
         return null;
+    }
+
+    public boolean isZeroSum(){
+        for (int i = 0; i < u1.length; i++) {
+            for (int j = 0; j < u1[i].length; j++) {
+                if(u1[i][j] != u2[i][j]*-1){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    double[] p1ZeroSum(int nRows, int nCols, ArrayList<Integer> iRow, ArrayList<Integer> jCol) {
+
+        // set P terms to one
+        double[] c = new double[nRows + 1];
+        for (int i = 0; i < nRows; i++) {
+            c[i] = 0.0;
+        }
+        c[nRows] = 1.0;
+
+        // set constraints independent term to
+        // utilities of row to dominate
+        double[] b = new double[nCols + 1];
+        for (int j = 0; j < nCols; j++) {
+            b[j] = 0.0;
+        }
+        b[nCols] = 1;
+
+        // constraints matrix
+        double[][] A = new double[nCols + 1][nRows + 1];
+        double minUtil = 0;
+
+        // add utilites to X's
+        for (int j = 0; j < nCols; j++) {
+            for (int i = 0; i < nRows; i++) {
+                A[j][i] = u2[iRow.get(i)][jCol.get(j)];
+                A[nCols][i] = 1.0;
+                if (A[j][i] < minUtil) {
+                    minUtil = A[j][i];
+                }
+            }
+            A[j][nRows] = -1.0;
+        }
+
+
+        // Set lower bounds
+        double[] lb = new double[nRows + 1];
+        for (int i = 0; i <= nRows; i++) {
+            lb[i] = 0;
+        }
+        lb[nRows] = minUtil;
+
+
+        LinearProgram lp = new LinearProgram(c);
+        lp.setMinProblem(true);
+        for (int j = 0; j < nCols; j++) {
+            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[j], b[j], "c" + j));
+        }
+        lp.addConstraint(new LinearEqualsConstraint(A[nCols], b[nCols], "c" + nCols));
+        lp.setLowerbound(lb);
+//        LinearProgramming.showLP(lp);
+        double[] x = new double[c.length];
+        x = LinearProgramming.solveLP(lp);
+//        LinearProgramming.showSolution(x, lp);
+
+        return x;
+    }
+
+    double[] p2ZeroSum(int nCols, int nRows, ArrayList<Integer> iRow, ArrayList<Integer> jCol) {
+
+        // set P terms to one
+        double[] c = new double[nCols + 1];
+        for (int i = 0; i < nCols; i++) {
+            c[i] = 0.0;
+        }
+        c[nCols] = 1.0;
+
+        // set constraints independent term to
+        // utilities of row to dominate
+        double[] b = new double[nRows + 1];
+        for (int j = 0; j < nRows; j++) {
+            b[j] = 0.0;
+        }
+        b[nRows] = 1;
+
+        // constraints matrix
+        double[][] A = new double[nRows + 1][nCols + 1];
+        double minUtil = 0;
+
+        // add utilites to X's
+        for (int i = 0; i < nRows; i++) {
+            for (int j = 0; j < nCols; j++) {
+                A[i][j] = u1[iRow.get(i)][jCol.get(j)];
+                A[nRows][j] = 1.0;
+                if (A[i][j] < minUtil) {
+                    minUtil = A[i][j];
+                }
+            }
+            A[i][nCols] = -1.0;
+        }
+
+
+        // Set lower bounds
+        double[] lb = new double[nCols + 1];
+        for (int j = 0; j <= nCols; j++) {
+            lb[j] = 0;
+        }
+        lb[nCols] = minUtil;
+
+
+        LinearProgram lp = new LinearProgram(c);
+        lp.setMinProblem(true);
+        for (int i = 0; i < nRows; i++) {
+            lp.addConstraint(new LinearSmallerThanEqualsConstraint(A[i], b[i], "c" + i));
+        }
+        lp.addConstraint(new LinearEqualsConstraint(A[nRows], b[nRows], "c" + nRows));
+        lp.setLowerbound(lb);
+//        LinearProgramming.showLP(lp);
+        double[] x = new double[c.length];
+        x = LinearProgramming.solveLP(lp);
+//        LinearProgramming.showSolution(x, lp);
+        return x;
     }
 
     public double[] doMaxMinP1(String[] labelsP1, String[] labelsP2) {
@@ -988,5 +1001,50 @@ public class NormalFormGame {
 
     public double[][] doMaxMin(String[] labelsP1, String[] labelsP2){
         return new double[][] {doMaxMinP1(labelsP1, labelsP2), doMaxMinP2(labelsP1, labelsP2)};
+    }
+
+    public double[][] doBestResponse(double[] strategyP1, double[] strategyP2){
+        if(bestResponseP1Index == null){
+            bestResponseP1Index = new int[strategyP2.length];
+            for (int i = 0; i < nCol; i++) {
+                for (int j = 0; j < nRow; j++) {
+                    if( u1[j][i] > u1[bestResponseP1Index[i]][i] ){
+                        bestResponseP1Index[i] = j;
+                    }
+                }
+            }
+        }
+        if(bestResponseP2Index == null){
+            bestResponseP2Index = new int[strategyP1.length];
+            for (int i = 0; i < nRow; i++) {
+                for (int j = 0; j < nCol; j++) {
+                    if( u2[i][j] > u2[i][bestResponseP2Index[i]] ){
+                        bestResponseP2Index[i] = j;
+                    }
+                }
+            }
+        }
+        System.out.println("******BEST RESPONSES******");
+        for (int k = 0; k < bestResponseP1Index.length; k++) {
+            System.out.println("P1 - Best response to action " + colActions.get(k) + " is " + rowActions.get(bestResponseP1Index[k]));
+        }
+
+        for (int k = 0; k < bestResponseP2Index.length; k++) {
+            System.out.println("P2 - Best response to action " + rowActions.get(k) + " is " + colActions.get(bestResponseP2Index[k]));
+        }
+
+        //probabilities
+        double[] bestResponseP1 = new double[strategyP1.length];
+        double[] bestResponseP2 = new double[strategyP2.length];
+
+        for (int i = 0; i < strategyP2.length; i++) {
+            bestResponseP1[bestResponseP1Index[i]] += strategyP2[i];
+        }
+
+        for (int i = 0; i < strategyP1.length; i++) {
+            bestResponseP2[bestResponseP1Index[i]] += strategyP1[i];
+        }
+
+        return new double[][]{bestResponseP1, bestResponseP2};
     }
 }

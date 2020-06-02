@@ -1,16 +1,15 @@
-package play.nashEquilibria;
+package play;
 
 import gametree.GameNode;
 import gametree.GameNodeDoesNotExistException;
 import lp.Dominance;
-import play.NormalFormGame;
-import play.PlayStrategy;
-import play.Strategy;
 import play.exception.InvalidStrategyException;
+import predicts.FrequencyPrediction;
 
 import java.util.Iterator;
 
-public class OneGeneralSumStrategy extends Strategy {
+public class MysteryGameStrategy extends Strategy {
+	FrequencyPrediction prediction;
 
 	@Override
 	public void execute() throws InterruptedException {
@@ -23,12 +22,13 @@ public class OneGeneralSumStrategy extends Strategy {
 			if(myStrategy == null) //Game was terminated by an outside event
 				break;	
 			boolean playComplete = false;
-						
+				GameNode fatherP1 = null;
+				GameNode finalP2 = null;
 			while(! playComplete ) {
 				System.out.println("*******************************************************");
 				if(myStrategy.getFinalP1Node() != -1) {
 					GameNode finalP1 = this.tree.getNodeByIndex(myStrategy.getFinalP1Node());
-					GameNode fatherP1 = null;
+					fatherP1 = null;
 					if(finalP1 != null) {
 						try {
 							fatherP1 = finalP1.getAncestor();
@@ -41,7 +41,7 @@ public class OneGeneralSumStrategy extends Strategy {
 					}
 				}			
 				if(myStrategy.getFinalP2Node() != -1) {
-					GameNode finalP2 = this.tree.getNodeByIndex(myStrategy.getFinalP2Node());
+					finalP2 = this.tree.getNodeByIndex(myStrategy.getFinalP2Node());
 					GameNode fatherP2 = null;
 					if(finalP2 != null) {
 						try {
@@ -54,6 +54,8 @@ public class OneGeneralSumStrategy extends Strategy {
 						System.out.println(" -> (Opp) " + finalP2.getPayoffP1() + " : (Me) "+ finalP2.getPayoffP2());
 					}
 				}
+
+				// region  Build Normal Form Game
 				// Normal Form Games only!
 				GameNode rootNode = tree.getRootNode();
 				int n1 = rootNode.numberOfChildren();
@@ -86,24 +88,96 @@ public class OneGeneralSumStrategy extends Strategy {
 				showUtility(1,U1);
 				showUtility(2,U2);
 				NormalFormGame game = new NormalFormGame(U1,U2,labelsP1,labelsP2);
-
 				game.showGame();
+				//endregion
 
-				// Solve domination
-				Dominance.solveDomination(game);
+				if(game.isZeroSum()){
+					System.out.println("Game is Zero Sum");
+					double[][] strategies = game.doMinmax(labelsP1, labelsP2);
+					for (int k = 0; k<labelsP1.length; k++) myStrategy.put(labelsP1[k], strategies[0][k]);
+					for (int k = 0; k<labelsP2.length; k++) myStrategy.put(labelsP2[k], strategies[1][k]);
+					showStrategy(1, strategies[0], labelsP1);
+					showStrategy(2, strategies[1], labelsP2);
+				} else {
+					if(prediction == null) {
+						prediction = new FrequencyPrediction(labelsP1.length, labelsP2.length);
+					}
 
-				game.showGame();
+					if(myStrategy.isFirstRound()){
+						//TODO: Do dominance
 
-				double[][] generalSumNash = game.doFirstGeneralSum();
-				System.out.println("***GENERAL SUM EQUILIBRIUM***");
-				game.printNash(labelsP1, labelsP2, generalSumNash);
+						int p1Choice = -1;
+						int p1MaxAvg = Integer.MIN_VALUE;
+						int p2Choice = -1;
+						int p2MaxAvg = Integer.MIN_VALUE;
+
+						for (int k = 0; k < labelsP1.length; k++) {
+							int p1Value = 0;
+							for (int l = 0; l < labelsP2.length; l++) {
+								p1Value += game.u1[k][l];
+							}
+							p1Value /= labelsP2.length;
+
+							if(p1Value > p1MaxAvg){
+								p1MaxAvg = p1Value;
+								p1Choice = k;
+							}
+						}
+
+						for (int l = 0; l < labelsP2.length; l++) {
+							int p2Value = 0;
+							for (int k = 0; k < labelsP1.length; k++) {
+								p2Value += game.u2[k][l];
+							}
+							p2Value /= labelsP1.length;
+
+							if(p2Value > p2MaxAvg){
+								p2MaxAvg = p2Value;
+								p2Choice = l;
+							}
+						}
+
+						double[][] strategies = {new double[labelsP1.length], new double[labelsP2.length]};
+						strategies[0][p1Choice] = 1.0;
+						strategies[1][p2Choice] = 1.0;
+						for (int k = 0; k<labelsP1.length; k++) myStrategy.put(labelsP1[k], strategies[0][k]);
+						for (int k = 0; k<labelsP2.length; k++) myStrategy.put(labelsP2[k], strategies[1][k]);
+						showStrategy(1, strategies[0], labelsP1);
+						showStrategy(2, strategies[1], labelsP2);
+					}
+					else{
+						//TODO: play best response to fictitious
+						int p1Idx = -1;
+						int p2Idx = -1;
+
+						for (int k = 0; k < labelsP1.length; k++) {
+							if(fatherP1.getLabel().equals(labelsP1[k])){
+								p1Idx = k;
+							}
+						}
+						for (int k = 0; k < labelsP2.length; k++) {
+							if(finalP2.getLabel().equals(labelsP2[k])){
+								p2Idx = k;
+							}
+						}
+						System.out.println("************Fictitious***********");
+
+						prediction.newRound(p1Idx, p2Idx);
+
+						double[][] strategies = game.doBestResponse(prediction.getP1Prob(), prediction.getP2Prob());
 
 
-				double[] strategyP1 = setStrategy(1, labelsP1, myStrategy);
-				double[] strategyP2 = setStrategy(2, labelsP2, myStrategy);
-				showStrategy(1, strategyP1, labelsP1);
-				showStrategy(2, strategyP2, labelsP2);
 
+						for (int k = 0; k<labelsP1.length; k++){
+							myStrategy.put(labelsP1[k], strategies[0][k]);
+						}
+						for (int k = 0; k<labelsP2.length; k++) {
+							myStrategy.put(labelsP2[k], strategies[1][k]);
+						}
+						showStrategy(1, strategies[0], labelsP1);
+						showStrategy(2, strategies[1], labelsP2);
+					}
+				}
 				try{
 					this.provideStrategy(myStrategy);
 					playComplete = true;
@@ -116,7 +190,7 @@ public class OneGeneralSumStrategy extends Strategy {
 		
 	}
 	
-	public static String showLabel(String label) {
+	public String showLabel(String label) {
 		return label.substring(label.lastIndexOf(':')+1);
 	}
 	
@@ -135,17 +209,8 @@ public class OneGeneralSumStrategy extends Strategy {
 		}
 	}
 	
-	public double[] setStrategy(int P, String[] labels, PlayStrategy myStrategy) {
+	public double[] setStrategy(int P, String[] labels, double[] strategy, PlayStrategy myStrategy) {
 		int n = labels.length;
-		double[] strategy = new double[n];
-		for (int i = 0; i<n; i++)  strategy[i] = 0;
-		if (P==1) { // if playing as player 1 then choose first action
-			strategy[0] = 1; 
-		}
-		else { 		// if playing as player 2 then choose first or second action randomly
-			strategy[0] = 0.5;
-			strategy[1] = 0.5;
-		}
 		for (int i = 0; i<n; i++) myStrategy.put(labels[i], strategy[i]);
 		return strategy;
 	}
@@ -154,4 +219,5 @@ public class OneGeneralSumStrategy extends Strategy {
 		System.out.println("Strategy Player " + P + ":");
 		for (int i = 0; i<labels.length; i++) System.out.println("   " + strategy[i] + ":" + showLabel(labels[i]));
 	}
+
 }
