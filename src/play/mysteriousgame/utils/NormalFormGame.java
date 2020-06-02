@@ -321,7 +321,12 @@ public class NormalFormGame {
 
     }
 
-    public void computeBestResponses() {
+    public String[] computeBestResponses(String actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1,
+                                         String actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2) {
+
+        String[] bestResponsesActionLabels = new String[2];
+
+
 
         if ( this.isAPrisonerDilemmaGame(this.matrixUtilitiesForPlayer1, this.matrixUtilitiesForPlayer2) ) {
 
@@ -330,9 +335,50 @@ public class NormalFormGame {
         }
         else {
 
+            int indexOfActionLabelForPlayerNum2 =
+                    this.actionLabelsForPlayerNum2
+                            .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1);
 
+            int indexOfActionLabelForPlayerNum1 =
+                    this.actionLabelsForPlayerNum1
+                            .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2);
+
+
+            double maxValuePayoffAsBestResponseForPlayer1 = Double.MIN_VALUE;
+            double maxValuePayoffAsBestResponseForPlayer2 = Double.MIN_VALUE;
+
+            for (int currentRow = 0; currentRow < this.numberOfActionsForPlayerNum1; currentRow++) {
+
+                if ( maxValuePayoffAsBestResponseForPlayer1 <
+                     this.matrixUtilitiesForPlayer1[currentRow][indexOfActionLabelForPlayerNum2] ) {
+
+                    maxValuePayoffAsBestResponseForPlayer1 =
+                            this.matrixUtilitiesForPlayer1[currentRow][indexOfActionLabelForPlayerNum2];
+
+                    bestResponsesActionLabels[0] = this.actionLabelsForPlayerNum1.get(currentRow);
+
+                }
+
+            }
+
+
+            for (int currentColumn = 0; currentColumn < this.numberOfActionsForPlayerNum2; currentColumn++) {
+
+                if ( maxValuePayoffAsBestResponseForPlayer2 <
+                        this.matrixUtilitiesForPlayer2[indexOfActionLabelForPlayerNum1][currentColumn] ) {
+
+                    maxValuePayoffAsBestResponseForPlayer2 =
+                            this.matrixUtilitiesForPlayer2[indexOfActionLabelForPlayerNum1][currentColumn];
+
+                    bestResponsesActionLabels[1] = this.actionLabelsForPlayerNum2.get(currentColumn);
+
+                }
+
+            }
 
         }
+
+        return bestResponsesActionLabels;
 
     }
 

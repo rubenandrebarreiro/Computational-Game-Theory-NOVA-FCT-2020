@@ -64,10 +64,11 @@ public class MysteriousGameStrategy extends Strategy {
 
     }
 
-    private void checkMyOpponentMoves(List<GameNode> listGameNodesReversedPathForPlayerNum1,
-                                      List<GameNode> listGameNodesReversedPathForPlayerNum2,
-                                      NormalFormGame normalFormGame,
-                                      int numCurrentRound)
+    private String[] checkMyOpponentMovesAndComputeBestResponses
+                    (List<GameNode> listGameNodesReversedPathForPlayerNum1,
+                     List<GameNode> listGameNodesReversedPathForPlayerNum2,
+                     NormalFormGame normalFormGame,
+                     int numCurrentRound)
 
     throws GameNodeDoesNotExistException {
 
@@ -133,11 +134,8 @@ public class MysteriousGameStrategy extends Strategy {
 
         }
 
-    }
-
-    private void tryToGuessNextOpponentMove() {
-
-
+        return normalFormGame.computeBestResponses(this.actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1,
+                                                   this.actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2);
 
     }
 
@@ -331,8 +329,7 @@ public class MysteriousGameStrategy extends Strategy {
 
                 normalFormGame.showMatrixFormGame();
 
-
-
+                String[] bestResponsesAsActionLabels = new String[2];
 
 
                 if ( ( gameNodeFinalForPlayerNum1 == null ) || ( gameNodeFinalForPlayerNum2 == null ) ) {
@@ -351,10 +348,48 @@ public class MysteriousGameStrategy extends Strategy {
 
                     try {
 
-                        this.checkMyOpponentMoves(listOfOpponentLastMovesAsPlayer1,
-                                                  listOfOpponentLastMovesAsPlayer2,
-                                                  normalFormGame,
-                                                  this.numCurrentRound);
+                        bestResponsesAsActionLabels =
+                                this.checkMyOpponentMovesAndComputeBestResponses(listOfOpponentLastMovesAsPlayer1,
+                                                                                 listOfOpponentLastMovesAsPlayer2,
+                                                                                 normalFormGame,
+                                                                                 this.numCurrentRound);
+
+                        // We now set our strategy to have a probability of 1.0 for the moves used
+                        // by our adversary in the previous round and zero for the remaining ones.
+                        Iterator<String> allAvailableMoves = myMysteriousGameStrategy.keyIterator();
+
+                        while( allAvailableMoves.hasNext() ) {
+
+                            String availableMoveActionLabel = allAvailableMoves.next();
+
+                            if ( ( showActionLabel(availableMoveActionLabel)
+                                   .equalsIgnoreCase(bestResponsesAsActionLabels[0]) ) &&
+                                 ( showPlayerNum(availableMoveActionLabel) == 1 ) ) {
+
+                                myMysteriousGameStrategy.put(availableMoveActionLabel, 1d);
+
+                                System.err.println("Setting " + availableMoveActionLabel + " to probability 1.0!!!");
+
+                            }
+                            else if ( ( showActionLabel(availableMoveActionLabel)
+                                        .equalsIgnoreCase(bestResponsesAsActionLabels[1]) ) &&
+                                      ( showPlayerNum(availableMoveActionLabel) == 2 ) ) {
+
+                                myMysteriousGameStrategy.put(availableMoveActionLabel, 1d);
+
+                                System.err.println("Setting " + availableMoveActionLabel + " to probability 1.0!!!");
+
+                            }
+
+                            else {
+
+                                myMysteriousGameStrategy.put(availableMoveActionLabel, 0d);
+
+                                System.err.println("Setting " + availableMoveActionLabel + " to probability 0.0!!!");
+
+                            }
+
+                        }
 
                     }
                     catch(GameNodeDoesNotExistException gameNodeDoesNotExistException) {
@@ -364,9 +399,6 @@ public class MysteriousGameStrategy extends Strategy {
                     }
 
                 }
-
-
-
 
 
 
@@ -390,21 +422,6 @@ public class MysteriousGameStrategy extends Strategy {
 
 
                 // TODO
-
-
-
-
-
-
-                double[] strategyForPlayerNum1 =
-                         setStrategyProbabilitiesForPlayer(1, actionLabelsForPlayerNum1,
-                                                           myMysteriousGameStrategy);
-                double[] strategyForPlayerNum2 =
-                         setStrategyProbabilitiesForPlayer(2, actionLabelsForPlayerNum2,
-                                                           myMysteriousGameStrategy);
-
-                showStrategyForPlayer(1, strategyForPlayerNum1, actionLabelsForPlayerNum1);
-                showStrategyForPlayer(2, strategyForPlayerNum2, actionLabelsForPlayerNum2);
 
                 numCurrentRound++;
 
@@ -468,46 +485,6 @@ public class MysteriousGameStrategy extends Strategy {
             System.out.println("|");
 
         }
-
-    }
-
-    public double[] setStrategyProbabilitiesForPlayer(int numPlayer, String[] actionLabels,
-                                                      PlayStrategy myStrategy) {
-
-        int numActionLabels = actionLabels.length;
-
-        double[] strategyProbabilities = new double[numActionLabels];
-
-        for (int currentActionLabel = 0;
-             currentActionLabel < numActionLabels;
-             currentActionLabel++)  {
-
-            strategyProbabilities[currentActionLabel] = 0;
-
-        }
-
-        if ( numPlayer == 1 ) {
-
-            // If playing as Player #1 then choose first action
-            strategyProbabilities[0] = 1;
-            strategyProbabilities[1] = 0.0;
-
-        }
-        else {
-
-            // If playing as Player #2 then choose first or second action randomly
-            strategyProbabilities[0] = 0.5;
-            strategyProbabilities[1] = 0.5;
-
-        }
-
-        for (int currentActionLabel = 0; currentActionLabel < numActionLabels; currentActionLabel++) {
-
-            myStrategy.put(actionLabels[currentActionLabel], strategyProbabilities[currentActionLabel]);
-
-        }
-
-        return strategyProbabilities;
 
     }
 
