@@ -163,8 +163,6 @@ public class MysteriousGameStrategy extends Strategy {
         GameNode gameNodeFinalForPlayerNum2 = null;
 
 
-
-
         // Infinite Loop
         while(true) {
 
@@ -425,9 +423,10 @@ public class MysteriousGameStrategy extends Strategy {
 
                             System.out.println("****ZERO SUM NASH EQUILIBRIUM****");
 
-                            normalFormGame.printNashEquilibriumMatrix(actionLabelsForPlayerNum1,
-                                    actionLabelsForPlayerNum2,
-                                    zeroSumNash);
+                            normalFormGame.printNashEquilibriumMatrix
+                                    (actionLabelsForPlayerNum1,
+                                     actionLabelsForPlayerNum2,
+                                     zeroSumNash);
 
 
                             for (int currentActionForPlayer1 = 0;
@@ -457,9 +456,10 @@ public class MysteriousGameStrategy extends Strategy {
 
                             System.out.println("****GENERAL SUM NASH EQUILIBRIUM****");
 
-                            normalFormGame.printNashEquilibriumMatrix(actionLabelsForPlayerNum1,
-                                    actionLabelsForPlayerNum2,
-                                    generalSumNashEquilibrium);
+                            normalFormGame.printNashEquilibriumMatrix
+                                    (actionLabelsForPlayerNum1,
+                                     actionLabelsForPlayerNum2,
+                                     generalSumNashEquilibrium);
 
                             for (int currentActionForPlayer1 = 0;
                                  currentActionForPlayer1 < actionLabelsForPlayerNum1.length;

@@ -151,17 +151,66 @@ public class NormalFormGame {
             Map<String, Double> beliefsForPlayer1 = new HashMap<>();
             Map<String, Double> beliefsForPlayer2 = new HashMap<>();
 
+            double maxUtilityForPlayer1 = Double.MIN_VALUE;
+            double maxUtilityForPlayer2 = Double.MIN_VALUE;
+
+            String actionLabelForMaxUtilityForPlayer1 = "";
+            String actionLabelForMaxUtilityForPlayer2 = "";
+
+            for (int currentActionForPlayerNum1 = 0;
+                 currentActionForPlayerNum1 < this.numberOfActionsForPlayerNum1;
+                 currentActionForPlayerNum1++) {
+
+                for (int currentActionForPlayerNum2 = 0;
+                     currentActionForPlayerNum2 < this.numberOfActionsForPlayerNum2;
+                     currentActionForPlayerNum2++) {
+
+                    if ( maxUtilityForPlayer1 <
+                        this.matrixUtilitiesForPlayer1[currentActionForPlayerNum1][currentActionForPlayerNum2] ) {
+
+                        maxUtilityForPlayer1 =
+                                this.matrixUtilitiesForPlayer1[currentActionForPlayerNum1][currentActionForPlayerNum2];
+
+                        actionLabelForMaxUtilityForPlayer1 = actionLabelsForPlayerNum1[currentActionForPlayerNum1];
+
+                    }
+
+
+                    if ( maxUtilityForPlayer2 <
+                            this.matrixUtilitiesForPlayer2[currentActionForPlayerNum1][currentActionForPlayerNum2] ) {
+
+                        maxUtilityForPlayer2 =
+                                this.matrixUtilitiesForPlayer2[currentActionForPlayerNum1][currentActionForPlayerNum2];
+
+                        actionLabelForMaxUtilityForPlayer2 = actionLabelsForPlayerNum2[currentActionForPlayerNum2];
+
+                    }
+
+                }
+
+            }
+
+
             for (String actionLabelForPlayerNum1 : this.actionLabelsForPlayerNum1) {
 
-                beliefsForPlayer2.put(actionLabelForPlayerNum1, 0.0); //TODO confirmar / valor random
+                beliefsForPlayer2.put
+                        (
+                                  actionLabelForPlayerNum1,
+                                ( actionLabelForPlayerNum1.equalsIgnoreCase(actionLabelForMaxUtilityForPlayer1) ) ?
+                                  1.0 : 0.0
+                        );
 
             }
 
 
             for (String actionLabelForPlayerNum2 : this.actionLabelsForPlayerNum2) {
 
-                beliefsForPlayer1.put(actionLabelForPlayerNum2, 0.0); //TODO confirmar / valor random
-
+                beliefsForPlayer1.put
+                        (
+                                actionLabelForPlayerNum2,
+                              ( actionLabelForPlayerNum2.equalsIgnoreCase(actionLabelForMaxUtilityForPlayer2) ) ?
+                                1.0 : 0.0
+                        );
             }
 
             this.fictitiousPlayLearningBeliefsForPlayerNum1.put(0, beliefsForPlayer1);
@@ -511,8 +560,7 @@ public class NormalFormGame {
 
     }
 
-
-    // TODO
+    @SuppressWarnings("unused")
     private boolean isAPrisonerDilemmaGame(double[][] matrixUtilitiesForPlayer1,
                                            double[][] matrixUtilitiesForPlayer2) {
 
