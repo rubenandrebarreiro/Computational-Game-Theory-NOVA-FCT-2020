@@ -33,7 +33,7 @@ public class Dominance {
                     i++;
                 }
             }
-            game.showGame();
+//            game.showGame();
 
 
                 while (j < game.pCol.length && !game.pCol[j])
@@ -51,7 +51,7 @@ public class Dominance {
                     j++;
                 }
             }
-            game.showGame();
+//            game.showGame();
 
         } while (i < (game.pRow.length) || j < (game.pCol.length) || changedRow || changedCol);
     }
@@ -128,7 +128,7 @@ public class Dominance {
             lp.addConstraint(new LinearBiggerThanEqualsConstraint(A[i], b[i], "c"+i));
         }
         lp.setLowerbound(lb);
-        LinearProgramming.showLP(lp);
+//        LinearProgramming.showLP(lp);
         double[] x = new double[c.length];
         x = LinearProgramming.solveLP(lp);
         if(x != null){

@@ -1047,4 +1047,64 @@ public class NormalFormGame {
 
         return new double[][]{bestResponseP1, bestResponseP2};
     }
+
+    public double[][] doBestResponseNoInfo(){
+        ArrayList<Integer> iRow = new ArrayList<>();
+        for (int i = 0; i < nRow; i++) {
+            if (pRow[i])
+                iRow.add(i);
+        }
+
+        ArrayList<Integer> jCol = new ArrayList<>();
+        for (int j = 0; j < nCol; j++) {
+            if (pCol[j])
+                jCol.add(j);
+        }
+
+        int nDomRow = iRow.size();
+        int nDomCol = jCol.size();
+
+        double[] p1BestStrategy = new double[nRow];
+        double[] p2BestStrategy = new double[nCol];
+
+        List<Integer> p1BestChoices = new ArrayList<>();
+        double maxUtilityP1 = Double.MIN_VALUE;
+        List<Integer> p2BestChoices = new ArrayList<>();
+        double maxUtilityP2 = Integer.MIN_VALUE;
+
+        for (int i = 0; i < nDomRow; i++) {
+            double sum = 0.0;
+            for (int j = 0; j < nDomCol; j++) {
+                sum += u1[iRow.get(i)][jCol.get(j)];
+            }
+            sum /= nDomCol;
+
+            if(sum >= maxUtilityP1){
+                maxUtilityP1 = sum;
+                p1BestChoices.add(iRow.get(i));
+            }
+        }
+
+        for (int j = 0; j < nDomCol; j++) {
+            double sum = 0.0;
+            for (int i = 0; i < nDomRow; i++) {
+                sum += u2[iRow.get(i)][jCol.get(j)];
+            }
+            sum /= nDomRow;
+
+            if(sum >= maxUtilityP2){
+                maxUtilityP2 = sum;
+                p2BestChoices.add(jCol.get(j));
+            }
+        }
+
+        for (int i = 0; i < p1BestChoices.size(); i++) {
+            p1BestStrategy[p1BestChoices.get(i)] = 1/(double)p1BestChoices.size();
+        }
+        for (int j = 0; j < p2BestChoices.size(); j++) {
+            p2BestStrategy[p2BestChoices.get(j)] = 1/(double)p2BestChoices.size();
+        }
+
+        return new double[][] {p1BestStrategy, p2BestStrategy};
+    }
 }

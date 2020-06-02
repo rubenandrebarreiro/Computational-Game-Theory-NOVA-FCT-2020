@@ -98,55 +98,22 @@ public class MysteryGameStrategy extends Strategy {
 					for (int k = 0; k<labelsP2.length; k++) myStrategy.put(labelsP2[k], strategies[1][k]);
 					showStrategy(1, strategies[0], labelsP1);
 					showStrategy(2, strategies[1], labelsP2);
-				} else {
+				}
+				else {
 					if(prediction == null) {
 						prediction = new FrequencyPrediction(labelsP1.length, labelsP2.length);
 					}
 
 					if(myStrategy.isFirstRound()){
-						//TODO: Do dominance
+						Dominance.solveDomination(game);
 
-						int p1Choice = -1;
-						int p1MaxAvg = Integer.MIN_VALUE;
-						int p2Choice = -1;
-						int p2MaxAvg = Integer.MIN_VALUE;
-
-						for (int k = 0; k < labelsP1.length; k++) {
-							int p1Value = 0;
-							for (int l = 0; l < labelsP2.length; l++) {
-								p1Value += game.u1[k][l];
-							}
-							p1Value /= labelsP2.length;
-
-							if(p1Value > p1MaxAvg){
-								p1MaxAvg = p1Value;
-								p1Choice = k;
-							}
-						}
-
-						for (int l = 0; l < labelsP2.length; l++) {
-							int p2Value = 0;
-							for (int k = 0; k < labelsP1.length; k++) {
-								p2Value += game.u2[k][l];
-							}
-							p2Value /= labelsP1.length;
-
-							if(p2Value > p2MaxAvg){
-								p2MaxAvg = p2Value;
-								p2Choice = l;
-							}
-						}
-
-						double[][] strategies = {new double[labelsP1.length], new double[labelsP2.length]};
-						strategies[0][p1Choice] = 1.0;
-						strategies[1][p2Choice] = 1.0;
+						double[][] strategies = game.doBestResponseNoInfo();
 						for (int k = 0; k<labelsP1.length; k++) myStrategy.put(labelsP1[k], strategies[0][k]);
 						for (int k = 0; k<labelsP2.length; k++) myStrategy.put(labelsP2[k], strategies[1][k]);
 						showStrategy(1, strategies[0], labelsP1);
 						showStrategy(2, strategies[1], labelsP2);
 					}
 					else{
-						//TODO: play best response to fictitious
 						int p1Idx = -1;
 						int p2Idx = -1;
 
@@ -163,10 +130,7 @@ public class MysteryGameStrategy extends Strategy {
 						System.out.println("************Fictitious***********");
 
 						prediction.newRound(p1Idx, p2Idx);
-
 						double[][] strategies = game.doBestResponse(prediction.getP1Prob(), prediction.getP2Prob());
-
-
 
 						for (int k = 0; k<labelsP1.length; k++){
 							myStrategy.put(labelsP1[k], strategies[0][k]);
