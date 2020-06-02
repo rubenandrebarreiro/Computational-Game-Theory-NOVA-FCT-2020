@@ -1037,12 +1037,13 @@ public class NormalFormGame {
         double[] bestResponseP1 = new double[strategyP1.length];
         double[] bestResponseP2 = new double[strategyP2.length];
 
-        for (int i = 0; i < strategyP2.length; i++) {
-            bestResponseP1[bestResponseP1Index[i]] += strategyP2[i];
+        for (int p2Action = 0; p2Action < strategyP2.length; p2Action++) {
+            int idx = bestResponseP1Index[p2Action];
+            bestResponseP1[idx] += strategyP2[p2Action];
         }
 
         for (int i = 0; i < strategyP1.length; i++) {
-            bestResponseP2[bestResponseP1Index[i]] += strategyP1[i];
+            bestResponseP2[bestResponseP2Index[i]] += strategyP1[i];
         }
 
         return new double[][]{bestResponseP1, bestResponseP2};
@@ -1068,9 +1069,9 @@ public class NormalFormGame {
         double[] p2BestStrategy = new double[nCol];
 
         List<Integer> p1BestChoices = new ArrayList<>();
-        double maxUtilityP1 = Double.MIN_VALUE;
+        double maxUtilityP1 = -Double.MAX_VALUE;
         List<Integer> p2BestChoices = new ArrayList<>();
-        double maxUtilityP2 = Integer.MIN_VALUE;
+        double maxUtilityP2 = -Double.MAX_VALUE;
 
         for (int i = 0; i < nDomRow; i++) {
             double sum = 0.0;

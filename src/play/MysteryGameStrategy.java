@@ -22,13 +22,14 @@ public class MysteryGameStrategy extends Strategy {
 			if(myStrategy == null) //Game was terminated by an outside event
 				break;	
 			boolean playComplete = false;
-				GameNode fatherP1 = null;
-				GameNode finalP2 = null;
+
 			while(! playComplete ) {
 				System.out.println("*******************************************************");
+				GameNode finalP1 = null;
+				GameNode fatherP2 = null;
 				if(myStrategy.getFinalP1Node() != -1) {
-					GameNode finalP1 = this.tree.getNodeByIndex(myStrategy.getFinalP1Node());
-					fatherP1 = null;
+					finalP1 = this.tree.getNodeByIndex(myStrategy.getFinalP1Node());
+					GameNode fatherP1 = null;
 					if(finalP1 != null) {
 						try {
 							fatherP1 = finalP1.getAncestor();
@@ -41,8 +42,7 @@ public class MysteryGameStrategy extends Strategy {
 					}
 				}			
 				if(myStrategy.getFinalP2Node() != -1) {
-					finalP2 = this.tree.getNodeByIndex(myStrategy.getFinalP2Node());
-					GameNode fatherP2 = null;
+					GameNode finalP2 = this.tree.getNodeByIndex(myStrategy.getFinalP2Node());
 					if(finalP2 != null) {
 						try {
 							fatherP2 = finalP2.getAncestor();
@@ -117,19 +117,20 @@ public class MysteryGameStrategy extends Strategy {
 						int p1Idx = -1;
 						int p2Idx = -1;
 
-						for (int k = 0; k < labelsP1.length; k++) {
-							if(fatherP1.getLabel().equals(labelsP1[k])){
-								p1Idx = k;
+						for (int k = 0; k < labelsP2.length; k++) {
+							if(finalP1.getLabel().equals(labelsP2[k])){
+								p2Idx = k;
 							}
 						}
-						for (int k = 0; k < labelsP2.length; k++) {
-							if(finalP2.getLabel().equals(labelsP2[k])){
-								p2Idx = k;
+						for (int k = 0; k < labelsP1.length; k++) {
+							if(fatherP2.getLabel().equals(labelsP1[k])){
+								p1Idx = k;
 							}
 						}
 						System.out.println("************Fictitious***********");
 
 						prediction.newRound(p1Idx, p2Idx);
+
 						double[][] strategies = game.doBestResponse(prediction.getP1Prob(), prediction.getP2Prob());
 
 						for (int k = 0; k<labelsP1.length; k++){
