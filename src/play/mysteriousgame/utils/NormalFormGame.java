@@ -38,6 +38,10 @@ public class NormalFormGame {
     // Matrix of Utilities for Player #2
     public double[][] matrixUtilitiesForPlayer2;
 
+    public String initialBestActionPlayer1 = "";
+
+    public String initialBestActionPlayer2 = "";
+
     public Map<Integer, String> fictitiousPlayLearningLastMovesForPlayerNum1;
 
     public Map<Integer, String> fictitiousPlayLearningLastMovesForPlayerNum2;
@@ -173,6 +177,8 @@ public class NormalFormGame {
 
                         actionLabelForMaxUtilityForPlayer1 = actionLabelsForPlayerNum1[currentActionForPlayerNum1];
 
+                        this.initialBestActionPlayer1 = actionLabelForMaxUtilityForPlayer1;
+
                     }
 
 
@@ -183,6 +189,8 @@ public class NormalFormGame {
                                 this.matrixUtilitiesForPlayer2[currentActionForPlayerNum1][currentActionForPlayerNum2];
 
                         actionLabelForMaxUtilityForPlayer2 = actionLabelsForPlayerNum2[currentActionForPlayerNum2];
+
+                        this.initialBestActionPlayer2 = actionLabelForMaxUtilityForPlayer2;
 
                     }
 
@@ -213,8 +221,8 @@ public class NormalFormGame {
                         );
             }
 
-            this.fictitiousPlayLearningBeliefsForPlayerNum1.put(0, beliefsForPlayer1);
-            this.fictitiousPlayLearningBeliefsForPlayerNum2.put(0, beliefsForPlayer2);
+            this.fictitiousPlayLearningBeliefsForPlayerNum1.put(1, beliefsForPlayer1);
+            this.fictitiousPlayLearningBeliefsForPlayerNum2.put(1, beliefsForPlayer2);
 
         }
 
@@ -227,19 +235,19 @@ public class NormalFormGame {
      *
      * @param numPlayer the Number of the Player
      *
-     * @param numLastRound the Number of the Last Round
+     * @param currentRound the Number of the Current Round
      *
      * @param lastMoveFromOpponent the Last Move performed by the Opponent
      *
      */
-    public void addFictitiousPlayLearningMoveForPlayer(int numPlayer, int numLastRound, String lastMoveFromOpponent)  {
+    public void addFictitiousPlayLearningMoveForPlayer(int numPlayer, int currentRound, String lastMoveFromOpponent)  {
 
         if (numPlayer == 1) {
 
-            this.fictitiousPlayLearningLastMovesForPlayerNum1.put(numLastRound, lastMoveFromOpponent);
+            this.fictitiousPlayLearningLastMovesForPlayerNum1.put((currentRound - 1), lastMoveFromOpponent);
 
             Map<String, Double> beliefsFromLastRoundForPlayer1 =
-                        this.fictitiousPlayLearningBeliefsForPlayerNum1.get( ( numLastRound - 1 ) );
+                    this.fictitiousPlayLearningBeliefsForPlayerNum1.get( ( currentRound - 1 ) );
 
 
             Map<String, Double> beliefsForPlayer1 = new HashMap<>();
@@ -263,15 +271,15 @@ public class NormalFormGame {
 
             }
 
-            this.fictitiousPlayLearningBeliefsForPlayerNum1.put(numLastRound, beliefsForPlayer1);
+            this.fictitiousPlayLearningBeliefsForPlayerNum1.put(currentRound, beliefsForPlayer1);
 
         }
         else {
 
-            this.fictitiousPlayLearningLastMovesForPlayerNum2.put(numLastRound, lastMoveFromOpponent);
+            this.fictitiousPlayLearningLastMovesForPlayerNum2.put((currentRound - 1), lastMoveFromOpponent);
 
             Map<String, Double> beliefsFromLastRoundForPlayer2 =
-                    this.fictitiousPlayLearningBeliefsForPlayerNum2.get( ( numLastRound - 1 ) );
+                    this.fictitiousPlayLearningBeliefsForPlayerNum2.get( ( currentRound - 1 ) );
 
 
             Map<String, Double> beliefsForPlayer2 = new HashMap<>();
@@ -295,18 +303,18 @@ public class NormalFormGame {
 
             }
 
-            this.fictitiousPlayLearningBeliefsForPlayerNum2.put(numLastRound, beliefsForPlayer2);
+            this.fictitiousPlayLearningBeliefsForPlayerNum2.put(currentRound, beliefsForPlayer2);
 
         }
 
     }
 
-    public String guessMyOpponentNextMoveForPlayer(int numPlayer, int numLastRound) {
+    public String guessMyOpponentNextMoveForPlayer(int numPlayer, int currentRound) {
 
         if ( numPlayer == 1 ) {
 
             Map<String, Double> beliefsFromCurrentRoundForPlayer1 =
-                                this.fictitiousPlayLearningBeliefsForPlayerNum1.get( numLastRound );
+                                this.fictitiousPlayLearningBeliefsForPlayerNum1.get( currentRound );
 
             double maximumValueForBeliefsFromCurrentRoundForPlayer1 = Double.MIN_VALUE;
 
@@ -338,7 +346,7 @@ public class NormalFormGame {
         else {
 
             Map<String, Double> beliefsFromCurrentRoundForPlayer2 =
-                    this.fictitiousPlayLearningBeliefsForPlayerNum2.get( numLastRound );
+                    this.fictitiousPlayLearningBeliefsForPlayerNum2.get( currentRound );
 
             double maximumValueForBeliefsFromCurrentRoundForPlayer2 = Double.MIN_VALUE;
 
@@ -376,14 +384,17 @@ public class NormalFormGame {
         String[] bestResponsesActionLabels = new String[2];
 
 
-        int indexOfActionLabelForPlayerNum2 =
-                this.actionLabelsForPlayerNum2
-                        .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1);
+        System.out.println(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1);
 
         int indexOfActionLabelForPlayerNum1 =
                 this.actionLabelsForPlayerNum1
-                        .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2);
+                        .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer1);
 
+        System.out.println(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2);
+
+        int indexOfActionLabelForPlayerNum2 =
+                this.actionLabelsForPlayerNum2
+                        .indexOf(actionForTheMaximumValueForBeliefsFromCurrentRoundForPlayer2);
 
         double maxValuePayoffAsBestResponseForPlayer1 = Double.MIN_VALUE;
         double maxValuePayoffAsBestResponseForPlayer2 = Double.MIN_VALUE;
