@@ -229,7 +229,7 @@ public class FixedRoundsStrategy extends Strategy {
         // region Check if it pays off to defect and defect if so
         int iterationsLeft = myStrategy.getMaximumNumberOfIterations();
         double gainFromDefect = defectToCooperatePayoff - cooperatePayoff;
-        double lossFromDefect = (cooperatePayoff - defectPayoff) * (iterationsLeft - 6);
+        double lossFromDefect = (cooperatePayoff - defectPayoff) * (iterationsLeft - 4);
 
         if(gainFromDefect > lossFromDefect){
             // Defect if it pays off
